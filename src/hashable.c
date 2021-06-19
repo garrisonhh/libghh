@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "hashable.h"
-#include "../lib/vector.h"
+#include <ghh/hashable.h>
 
 hash_t hash_unsigned(const void *u_num) {
 	hash_t hash = *(unsigned *)u_num;
@@ -45,25 +44,6 @@ const void *copy_string(const void *string) {
 	return str;
 }
 
-hash_t hash_v3i(const void *v3i_ptr) {
-	v3i v = *(v3i *)v3i_ptr;
-	unsigned hashable = v.x + v.y + v.z; 
-
-	return hash_unsigned(&hashable);
-}
-
-int cmp_v3i(const void *a, const void *b) {
-	return v3i_compare(*(v3i *)a, *(v3i *)b);
-}
-
-const void *copy_v3i(const void *v3i_ptr) {
-	v3i *vcpy = malloc(sizeof(v3i));
-
-	*vcpy = *(v3i *)v3i_ptr;
-
-	return vcpy;
-}
-
 hashmap_funcs_t hashmap_funcs(hashable_e hashable) {
 	switch (hashable) {
 	case HASH_UNSIGNED:
@@ -77,12 +57,6 @@ hashmap_funcs_t hashmap_funcs(hashable_e hashable) {
 				.cmp = cmp_string,
 				.hash = hash_string,
 				.copy = copy_string
-			};
-		case HASH_V3I:
-			return (hashmap_funcs_t){
-				.cmp = cmp_v3i,
-				.hash = hash_v3i,
-				.copy = copy_v3i
 			};
 		default:
 			exit(1);
