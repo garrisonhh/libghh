@@ -8,7 +8,7 @@ struct array {
 };
 
 array_t *array_create(size_t initial_size) {
-	array_t *array = malloc(sizeof(array_t));
+	array_t *array = malloc(sizeof(*array));
 
 	array->size = 0;
 	array->min_size = (initial_size < 4 ? 4 : initial_size);
