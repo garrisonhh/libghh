@@ -6,9 +6,8 @@ add to a premake project using `include "PATH_TO_GHH_LIB_DIR"` and then `links {
 
 # usage
 
-common conventions
+- idgaf about data privacy
 - struct members `size_t max_size, size, min_size;` specify the max size (aka number of items currently allocated for), number of actual items stored, and the minimum allocated size (to prevent unnecessary realloc calls when you can estimate size)
-- data structures preserve all data by default
 
 ## array
 
