@@ -3,12 +3,18 @@
 #include <stdbool.h>
 #include <ghh/heap.h>
 
+struct heap {
+	void **items;
+	size_t max_size, size;
+	int (*compare)(const void *, const void *);
+};
+
 heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *)) {
 	heap_t *heap = malloc(sizeof(heap_t));
 
 	heap->max_size = (1 << initial_depth) - 1;
 	heap->size = 0;
-	heap->items = calloc(heap->max_size, sizeof(void *));
+	heap->items = malloc(heap->max_size * sizeof(void *));
 	heap->compare = compare;
 
 	for (size_t i = 0; i < heap->max_size; i++)

@@ -75,25 +75,6 @@ void *array_del(array_t *array, int index) {
 	return item;
 }
 
-void array_remove(array_t *array, void *item) {
-	int i, j;
-
-	for (i = 0; i < array->size; i++) {
-		if (array->items[i] == item) {
-			for (j = i + 1; j < array->size; j++)
-				array->items[j - 1] = array->items[j];
-
-			--array->size;
-
-			if (array->alloc_size > array->min_size && array->size < array->alloc_size >> 1) {
-				array->alloc_size >>= 1;
-				array->items = realloc(array->items, sizeof(void *) * array->alloc_size);
-			}
-			break;
-		}
-	}
-}
-
 void array_clear(array_t *array, bool destroy_values) {
 	if (destroy_values)
 		for (size_t i = 0; i < array->size; i++)

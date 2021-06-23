@@ -1,14 +1,10 @@
 #ifndef HEAP_H
 #define HEAP_H
 
-#include <stdlib.h>
+#include <stddef.h>
+#include <stdbool.h>
 
-struct heap_t {
-	void **items;
-	size_t max_size, size;
-	int (*compare)(const void *, const void *);
-};
-typedef struct heap_t heap_t;
+typedef struct heap heap_t;
 
 heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *));
 void heap_destroy(heap_t *, bool destroy_values);
