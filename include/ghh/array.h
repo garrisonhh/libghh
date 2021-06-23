@@ -1,21 +1,24 @@
 #ifndef ARRAY_H
 #define ARRAY_H
 
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdbool.h>
 
-struct array_t {
-	void **items;
-	size_t max_size, size, min_size;
-};
-typedef struct array_t array_t;
+typedef struct array array_t;
 
 array_t *array_create(size_t initial_size);
 void array_destroy(array_t *, bool destroy_values);
 
+// getters
+size_t array_size(array_t *);
+void *array_get(array_t *, int index);
+
+// stack ops
 void array_push(array_t *, void *item);
 void *array_pop(array_t *);
 void *array_peek(array_t *);
+
+// array ops
 void *array_del(array_t *, int index);
 void array_remove(array_t *, void *item);
 void array_clear(array_t *, bool destroy_values);
