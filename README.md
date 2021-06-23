@@ -66,8 +66,7 @@ void *hashmap_iter_next(hashmap_iter_t *); // returns NULL when done
 // hashable enum (located in hashable.h)
 enum hashable_e {
 	HASH_UNSIGNED,
-	HASH_STRING,
-	HASH_V3I,
+	HASH_STRING
 };
 typedef enum hashable_e hashable_e;
 ```
