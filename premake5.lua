@@ -9,14 +9,15 @@ project "ghh"
 	objdir ("obj/%{prj.name}")
 
 	files {
-		"include/**.h",
-		"src/**.c"
+		"./include/**.h",
+		"./src/**.c"
 	}
 
 	includedirs {
-		"include"
+		"./include/"
 	}
 
 	if os.target() == "windows" then
+		makesettings { "CC=gcc" }
 		links { "mingw32" }
 	end
