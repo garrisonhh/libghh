@@ -8,14 +8,15 @@ struct string_t {
 };
 
 string_t *string_create(const char *initial_str) {
-	string_t *str = malloc(sizeof(string_t));
+	string_t *str = malloc(sizeof(*str));
 
-	str->length = 0;
-	str->data = malloc(sizeof(char));
-	str->data[0] = '\0';
+	if (initial_str == NULL)
+		initial_str = "";
 
-	if (initial_str != NULL)
-		string_set(str, initial_str);
+	str->length = strlen(initial_str);
+	str->data = malloc(sizeof(char) * (str->length + 1));
+
+	strcpy(str->data, initial_str);
 
 	return str;
 }
@@ -25,24 +26,20 @@ void string_destroy(string_t *str) {
 	free(str);
 }
 
-char *string_get(string_t *str) {
+size_t string_length(string_t *str) {
+	return str->length;
+}
+
+char *string_raw(string_t *str) {
 	return str->data;
 }
 
-char *string_get_copy(string_t *str) {
+char *string_copy(string_t *str) {
 	char *copy = malloc(sizeof(char) * (str->length + 1));
 
 	strcpy(copy, str->data);
 
 	return copy;
-}
-
-size_t string_length(string_t *str) {
-	return str->length;
-}
-
-char string_index(string_t *str, size_t i) {
-	return str->data[i];
 }
 
 void string_set(string_t *str, const char *data) {

@@ -158,14 +158,12 @@ void *list_remove(list_t *list, void *item) {
 }
 
 void list_merge(list_t *list, list_t *other) {
-	if (list->size) {
+	if (list->size)
 		list->tip->next = other->root;
-		list->tip = other->tip;
-	} else {
+	else
 		list->root = other->root;
-		list->tip = other->tip;
-	}
 
+	list->tip = other->tip;
 	list->size += other->size;
 
 	other->root = NULL;
