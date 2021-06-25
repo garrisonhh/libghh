@@ -4,33 +4,31 @@ data structures and utilities I made and use for C99.
 
 add to a premake project using `include "PATH_TO_GHH_LIB_DIR"` and then `links { "ghh" }`
 
-# usage
-
-- idgaf about data privacy
-- struct members `size_t max_size, size, min_size;` specify the max size (aka number of items currently allocated for), number of actual items stored, and the minimum allocated size (to prevent unnecessary realloc calls when you can estimate size)
-
 ## array
 
-```c
-struct array_t {
-	void **items;
-	size_t max_size, size, min_size;
-}
-typedef struct array_t array_t;
+a dynamic array implementation, I definitely use it more like a stack
 
-array_t *array_create(void);
+```c
+typedef struct array array_t;
+
+// instancing
+array_t *array_create(size_t initial_size);
 void array_destroy(array_t *, bool destroy_values);
 
+// data access
+size_t array_size(array_t *);
+void *array_get(array_t *, int index);
+
+// stack ops
 void array_push(array_t *, void *item);
 void *array_pop(array_t *);
 void *array_peek(array_t *);
+
+// array ops
 void *array_del(array_t *, int index);
-void array_remove(array_t *, void *item);
 void array_clear(array_t *, bool destroy_values);
 void array_qsort(array_t *, int (*compare)(const void *, const void *));
 ```
-
-- reallocs its memory when pushing and popping
 
 ## hashmap
 
@@ -70,6 +68,7 @@ enum hashable_e {
 };
 typedef enum hashable_e hashable_e;
 ```
+
 - hashmaps handle key types through the `hashable_e` enum entry
 - keys are robust: hashmap copies the key data from the key and only compares data, not pointers
   - the downside of this is that long keys will also be copied, so don't use massive keys
@@ -78,12 +77,7 @@ typedef enum hashable_e hashable_e;
 ## heap
 
 ```c
-struct heap_t {
-	void **items;
-	size_t max_size, size;
-	int (*compare)(const void *, const void *);
-};
-typedef struct heap_t heap_t;
+typedef struct heap heap_t;
 
 heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *));
 void heap_destroy(heap_t *, bool destroy_values);
@@ -100,35 +94,32 @@ void *heap_replace(heap_t *, void *item);
 ## list
 
 ```c
-#define LIST_FOREACH(node, list) for (node = list->root; node != NULL; node = node->next)
+typedef struct list list_t;
+typedef struct list_iter list_iter_t;
 
-struct list_node_t {
-	void *item;
-	struct list_node_t *next;
-};
-typedef struct list_node_t list_node_t;
-
-struct list_t {
-	list_node_t *root, *tip;
-	size_t size;
-};
-typedef struct list_t list_t;
-
-list_t *list_create();
+// list
+list_t *list_create(void);
 void list_destroy(list_t *, bool destroy_values);
 
+// data access
+size_t list_size(list_t *);
+void *list_get(list_t *, size_t index);
+
+// stack/queue ops
 void list_push(list_t *, void *item);
+void list_append(list_t *, void *item);
 void *list_pop(list_t *);
 void *list_peek(list_t *);
-void list_append(list_t *, void *item);
-
-void *list_get(list_t *, size_t index);
 
 // directly compares pointers
 void *list_remove(list_t *, void *item);
 void list_merge(list_t *, list_t *other);
+
+// list iterator
+list_iter_t *list_iter_create(list_t *);
+
+void list_iter_reset(list_iter_t *);
+void *list_iter_next(list_iter_t *); // returns NULL when done
 ```
 
-- using `push()` and `pop()` will act as a stack by default (push to/pop from root)
-	- use `append()` instead of `push()` for queue functionality
-- `list_merge()` pops all items from the second list and appends them to the first, but does not destroy it
+- `list_merge()` pops all items from the second list and appends them to the first, but does not destroy the second list
