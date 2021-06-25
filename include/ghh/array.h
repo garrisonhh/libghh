@@ -1,5 +1,5 @@
-#ifndef ARRAY_H
-#define ARRAY_H
+#ifndef GHH_ARRAY_H
+#define GHH_ARRAY_H
 
 #include <stddef.h>
 #include <stdbool.h>

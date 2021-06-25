@@ -1,5 +1,5 @@
-#ifndef HASHABLE_H
-#define HASHABLE_H
+#ifndef GHH_HASHABLE_H
+#define GHH_HASHABLE_H
 
 typedef unsigned hash_t;
 

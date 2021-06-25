@@ -1,5 +1,5 @@
-#ifndef MYSTRING_H
-#define MYSTRING_H
+#ifndef GHH_MYSTRING_H
+#define GHH_MYSTRING_H
 
 #include <stddef.h>
 

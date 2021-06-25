@@ -1,5 +1,5 @@
-#ifndef MYTIMER_H
-#define MYTIMER_H
+#ifndef GHH_MYTIMER_H
+#define GHH_MYTIMER_H
 
 #include <stddef.h>
 

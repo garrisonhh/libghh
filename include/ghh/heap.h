@@ -1,5 +1,5 @@
-#ifndef HEAP_H
-#define HEAP_H
+#ifndef GHH_HEAP_H
+#define GHH_HEAP_H
 
 #include <stddef.h>
 #include <stdbool.h>

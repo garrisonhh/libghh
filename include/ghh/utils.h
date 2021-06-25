@@ -1,11 +1,11 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef GHH_UTILS_H
+#define GHH_UTILS_H
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <math.h>
 
-/* 
+/*
  * apparently M_PI isn't always defined in math.h between c versions?
  * gcc defines M_PI anyways, but it isn't the standard and that
  * would break using another compiler. the c language, dude.
