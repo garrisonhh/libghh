@@ -49,7 +49,7 @@
 	BIT_SET_COND(bitfield, index2, swp);\
 }
 
-#define fround(d) ((int)(d + 0.5 + EPSILON))
+#define fround(d) (floor(d + 0.5 + EPSILON))
 
 static inline bool fequals(double a, double b) {
 	return fabs(a - b) < EPSILON;
