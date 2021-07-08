@@ -1,7 +1,4 @@
-#include <stdlib.h>
 #include <stdio.h>
-#include <stdbool.h>
-#include <math.h>
 #include <sys/time.h>
 #include <ghh/utils.h>
 
@@ -11,18 +8,6 @@ struct timeval LAST_TIMEIT = {
 	.tv_sec = 0,
 	.tv_usec = 0
 };
-
-bool d_close(double a, double b) {
-	return fabs(a - b) < FLOAT_TOLERANCE;
-}
-
-double randf() {
-	return (double)rand() / (double)RAND_MAX;
-}
-
-double rand_angle() {
-	return randf() * M_PI * 2.0;
-}
 
 void timeit_start() {
 	gettimeofday(&LAST_TIMEIT, NULL);
@@ -79,6 +64,7 @@ void print_bits(const char *message, unsigned n, size_t bits) {
 	printf("\n");
 }
 
+#ifndef _WIN32
 void term_set_bg(int color) {
 	int r, g, b;
 
@@ -103,3 +89,4 @@ void term_set_fg(int color) {
 void term_reset_color() {
 	printf("\e[0m");
 }
+#endif

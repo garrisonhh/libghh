@@ -1,20 +1,17 @@
 #ifndef GHH_UTILS_H
 #define GHH_UTILS_H
 
-#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <math.h>
 
-/*
- * apparently M_PI isn't always defined in math.h between c versions?
- * gcc defines M_PI anyways, but it isn't the standard and that
- * would break using another compiler. the c language, dude.
- */
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
 #endif
 
-#define FLOAT_TOLERANCE 0.000001
+#define EPSILON 0.000001
 
 #define MAX(a, b) (a > b ? a : b)
 #define MIN(a, b) (a < b ? a : b)
@@ -52,19 +49,36 @@
 	BIT_SET_COND(bitfield, index2, swp);\
 }
 
-#define D_ROUND(d) ((int)(d + 0.5))
+#define fround(d) ((int)(d + 0.5 + EPSILON))
 
-extern const float SQRT2;
+static inline bool fequals(double a, double b) {
+	return fabs(a - b) < EPSILON;
+}
 
-bool d_close(double a, double b);
-double randf(void); // returns values between 0 and 1
-double rand_angle(void);
+static inline double randf() {
+	return (double)rand() / (double)RAND_MAX;
+}
+
+static inline double rand_angle() {
+	return randf() * M_PI * 2.0;
+}
+
+#define ERROR(msg, ...) {\
+	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
+	fprintf(stderr, msg, __VA_ARGS__);\
+	exit(-1);\
+}
+
 void timeit_start(void);
 void timeit_end(const char *message);
 double timeit_get_time(void);
+
 void print_bits(const char *message, unsigned n, size_t bits);
+
+#ifndef _WIN32
 void term_set_bg(int color);
 void term_set_fg(int color);
 void term_reset_color();
+#endif
 
 #endif
