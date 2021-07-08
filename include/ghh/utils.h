@@ -65,7 +65,13 @@ static inline double rand_angle() {
 
 #define ERROR(msg, ...) {\
 	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
-	fprintf(stderr, msg, __VA_ARGS__);\
+	fprintf(stderr, msg, __VA_ARGS__ /* HEY DUMBO, TRAILING COMMA? USE ERROR0 */);\
+	exit(-1);\
+}
+
+#define ERROR0(msg) {\
+	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
+	fprintf(stderr, msg);\
 	exit(-1);\
 }
 
