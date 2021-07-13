@@ -60,3 +60,7 @@ double mytimer_get_fps(mytimer_t *timer) {
 
 	return timer->len_tracked / average;
 }
+
+double mytimer_get_avg_tick(mytimer_t *timer) {
+	return 1.0 / mytimer_get_fps(timer);
+}
