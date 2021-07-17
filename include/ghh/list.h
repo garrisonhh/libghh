@@ -14,6 +14,8 @@ void list_destroy(list_t *, bool destroy_values);
 // data access
 size_t list_size(list_t *);
 void *list_get(list_t *, size_t index);
+void *list_get_root(list_t *);
+void *list_get_tip(list_t *);
 
 // stack/queue ops
 void list_push(list_t *, void *item);

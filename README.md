@@ -1,6 +1,6 @@
 # ghh-lib
 
-data structures and utilities I made and use for C99. 
+data structures and utilities I made and use for C99.
 
 add to a premake project using `include "PATH_TO_GHH_LIB_DIR"` and then `links { "ghh" }`
 
@@ -103,6 +103,8 @@ void list_destroy(list_t *, bool destroy_values);
 // data access
 size_t list_size(list_t *);
 void *list_get(list_t *, size_t index);
+void *list_get_root(list_t *);
+void *list_get_tip(list_t *);
 
 // stack/queue ops
 void list_push(list_t *, void *item);

@@ -50,6 +50,14 @@ size_t list_size(list_t *list) {
 	return list->size;
 }
 
+void *list_get_root(list_t *list) {
+	return list->root->item;
+}
+
+void *list_get_tip(list_t *list) {
+	return list->tip->item;
+}
+
 void *list_get(list_t *list, size_t index) {
 	if (index >= list->size) {
 		printf("tried to access node at index outside of linked list.\n");
