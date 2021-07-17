@@ -32,7 +32,11 @@ void heap_destroy(heap_t *heap, bool destroy_values) {
 	free(heap);
 }
 
-void heap_swap_indices(heap_t *heap, size_t a, size_t b) {
+size_t heap_size(heap_t *heap) {
+	return heap->size;
+}
+
+static inline void heap_swap_indices(heap_t *heap, size_t a, size_t b) {
 	void *swap = heap->items[a];
 	heap->items[a] = heap->items[b];
 	heap->items[b] = swap;
