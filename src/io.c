@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <ghh/utils.h>
 
 // string must be freed
 char *load_text_file(const char *filename) {
