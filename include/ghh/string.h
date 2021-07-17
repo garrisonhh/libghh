@@ -1,9 +1,9 @@
-#ifndef GHH_MYSTRING_H
-#define GHH_MYSTRING_H
+#ifndef GHH_STRING_H
+#define GHH_STRING_H
 
 #include <stddef.h>
 
-typedef struct string_t string_t;
+typedef struct ghh_string string_t;
 
 string_t *string_create(const char *initial);
 void string_destroy(string_t *);

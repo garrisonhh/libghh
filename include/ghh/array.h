@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef struct array array_t;
+typedef struct ghh_array array_t;
 
 // instancing
 array_t *array_create(size_t initial_size);

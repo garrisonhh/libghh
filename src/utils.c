@@ -64,7 +64,6 @@ void print_bits(const char *message, unsigned n, size_t bits) {
 	printf("\n");
 }
 
-#ifndef _WIN32
 void term_set_bg(int color) {
 	int r, g, b;
 
@@ -89,4 +88,3 @@ void term_set_fg(int color) {
 void term_reset_color() {
 	printf("\e[0m");
 }
-#endif

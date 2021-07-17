@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <ghh/array.h>
 
-struct array {
+struct ghh_array {
 	void **items;
 	size_t size, min_size, alloc_size;
 };

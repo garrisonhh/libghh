@@ -65,13 +65,7 @@ static inline double rand_angle() {
 
 #define ERROR(msg, ...) {\
 	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
-	fprintf(stderr, msg, __VA_ARGS__ /* HEY DUMBO, TRAILING COMMA? USE ERROR0 */);\
-	exit(-1);\
-}
-
-#define ERROR0(msg) {\
-	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
-	fprintf(stderr, msg);\
+	fprintf(stderr, __VA_ARGS__ /* error here? include a message, lol */ );\
 	exit(-1);\
 }
 
@@ -81,10 +75,8 @@ double timeit_get_time(void);
 
 void print_bits(const char *message, unsigned n, size_t bits);
 
-#ifndef _WIN32
 void term_set_bg(int color);
 void term_set_fg(int color);
 void term_reset_color();
-#endif
 
 #endif

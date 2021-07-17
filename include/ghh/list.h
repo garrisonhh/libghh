@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef struct list list_t;
-typedef struct list_iter list_iter_t;
+typedef struct ghh_list list_t;
+typedef struct ghh_listiter listiter_t;
 
 // list
 list_t *list_create(void);
@@ -26,9 +26,9 @@ void *list_remove(list_t *, void *item);
 void list_merge(list_t *, list_t *other);
 
 // list iterator
-list_iter_t *list_iter_create(list_t *);
+listiter_t *list_iter_create(list_t *);
 
-void list_iter_reset(list_iter_t *);
-void *list_iter_next(list_iter_t *); // returns NULL when done
+void list_iter_reset(listiter_t *);
+void *list_iter_next(listiter_t *); // returns NULL when done
 
 #endif

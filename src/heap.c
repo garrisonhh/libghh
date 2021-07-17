@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <ghh/heap.h>
 
-struct heap {
+struct ghh_heap {
 	void **items;
 	size_t max_size, size;
 	int (*compare)(const void *, const void *);

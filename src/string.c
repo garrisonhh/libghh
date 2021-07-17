@@ -2,7 +2,7 @@
 #include <string.h>
 #include <ghh/mystring.h>
 
-struct string_t {
+struct ghh_string {
 	char *data;
 	size_t length;
 };

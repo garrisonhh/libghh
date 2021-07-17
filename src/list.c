@@ -6,16 +6,16 @@
 typedef struct list_node {
 	void *item;
 	struct list_node *next;
-} list_node_t;
+} listnode_t;
 
-struct list {
-	list_node_t *root, *tip;
+struct ghh_list {
+	listnode_t *root, *tip;
 	size_t size;
 };
 
-struct list_iter {
+struct ghh_listiter {
 	list_t *list;
-	list_node_t *node;
+	listnode_t *node;
 };
 
 list_t *list_create() {
@@ -29,7 +29,7 @@ list_t *list_create() {
 }
 
 void list_destroy(list_t *list, bool destroy_values) {
-	list_node_t *trav, *last;
+	listnode_t *trav, *last;
 
 	trav = list->root;
 
@@ -57,7 +57,7 @@ void *list_get(list_t *list, size_t index) {
 	}
 
 	int i = 0;
-	list_node_t *trav = list->root;
+	listnode_t *trav = list->root;
 
 	while (++i < index)
 		trav = trav->next;
@@ -66,7 +66,7 @@ void *list_get(list_t *list, size_t index) {
 }
 
 void list_push(list_t *list, void *item) {
-	list_node_t *node = malloc(sizeof(list_node_t));
+	listnode_t *node = malloc(sizeof(listnode_t));
 
 	node->item = item;
 
@@ -83,7 +83,7 @@ void list_push(list_t *list, void *item) {
 }
 
 void list_append(list_t *list, void *item) {
-	list_node_t *node = malloc(sizeof(list_node_t));
+	listnode_t *node = malloc(sizeof(listnode_t));
 
 	node->item = item;
 	node->next = NULL;
@@ -105,7 +105,7 @@ void *list_pop(list_t *list) {
 		exit(1);
 	}
 
-	list_node_t *old_root;
+	listnode_t *old_root;
 	void *item;
 
 	old_root = list->root;
@@ -125,7 +125,7 @@ void *list_peek(list_t *list) {
 }
 
 void *list_remove(list_t *list, void *item) {
-	list_node_t *trav, *last;
+	listnode_t *trav, *last;
 
 	last = NULL;
 	trav = list->root;
@@ -171,8 +171,8 @@ void list_merge(list_t *list, list_t *other) {
 	other->size = 0;
 }
 
-list_iter_t *list_iter_create(list_t *list) {
-	list_iter_t *iter = malloc(sizeof(*iter));
+listiter_t *list_iter_create(list_t *list) {
+	listiter_t *iter = malloc(sizeof(*iter));
 
 	iter->list = list;
 	iter->node = NULL;
@@ -180,11 +180,11 @@ list_iter_t *list_iter_create(list_t *list) {
 	return iter;
 }
 
-void list_iter_reset(list_iter_t *iter) {
+void list_iter_reset(listiter_t *iter) {
 	iter->node = NULL;
 }
 
-void *list_iter_next(list_iter_t *iter) {
+void *list_iter_next(listiter_t *iter) {
 	if (iter->node == NULL)
 		iter->node = iter->list->root;
 	else

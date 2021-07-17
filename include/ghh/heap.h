@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef struct heap heap_t;
+typedef struct ghh_heap heap_t;
 
 heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *));
 void heap_destroy(heap_t *, bool destroy_values);
