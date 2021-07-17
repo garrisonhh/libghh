@@ -33,46 +33,53 @@ void array_qsort(array_t *, int (*compare)(const void *, const void *));
 ## hashmap
 
 ```c
-typedef struct hashbucket_t hashbucket_t;
-typedef struct hashmap_t hashmap_t;
-typedef struct hashmap_iter_t hashmap_iter_t;
+#ifndef GHH_HASHMAP_H
+#define GHH_HASHMAP_H
 
-struct hashmap_t {
-	hashbucket_t *buckets;
-	size_t max_size, size, min_size;
-	hashmap_funcs_t funcs;
-};
+#include <stddef.h>
+#include <stdbool.h>
 
-// hashmap
-hashmap_t *hashmap_create(size_t initial_size, hashable_e hash_type);
+typedef struct ghh_hashmap hashmap_t;
+typedef struct ghh_hmapiter hmapiter_t;
+
+// instancing
+// key_size < 0: hashes as a string
+// key_size > 0: hashes a type where key_size == sizeof(type)
+hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys);
 void hashmap_destroy(hashmap_t *, bool destroy_values);
 
+// data access
+size_t hashmap_size(hashmap_t *);
+
+// ops
 void *hashmap_get(hashmap_t *, const void *key);
-void hashmap_set(hashmap_t *, const void *key, const void *value);
+void *hashmap_set(hashmap_t *, const void *key, const void *value);
 void *hashmap_remove(hashmap_t *, const void *key);
 
-void hashmap_print(hashmap_t *, size_t, size_t);
+void hashmap_debug(hashmap_t *); // TODO REMOVE
 
 // hashmap iterator
-hashmap_iter_t *hashmap_iter_create(hashmap_t *);
 
-void hashmap_iter_reset(hashmap_iter_t *);
-void *hashmap_iter_next(hashmap_iter_t *); // returns NULL when done
+/* usage:
+hmapiter_t *iterator = hmapiter_create(hashmap);
+void *value;
+
+while (hmapiter_next(iterator, &value))
+    ; //do stuff ...
+
+free(iterator);
+*/
+// hmapiter_t is reset on stop, so can be reused as many times as you want
+// hmapiter_t does not have to be recreated when hashmap is changed, but it
+// will not work as intended if you edit hashmap during iteration.
+
+hmapiter_t *hmapiter_create(hashmap_t *);
+// free() to destroy
+
+bool hmapiter_next(hmapiter_t *, void **out_key, void **out_value);
+
+#endif
 ```
-
-```c
-// hashable enum (located in hashable.h)
-enum hashable_e {
-	HASH_UNSIGNED,
-	HASH_STRING
-};
-typedef enum hashable_e hashable_e;
-```
-
-- hashmaps handle key types through the `hashable_e` enum entry
-- keys are robust: hashmap copies the key data from the key and only compares data, not pointers
-  - the downside of this is that long keys will also be copied, so don't use massive keys
-- `hashmap_remove()` returns the `value` pointer
 
 ## heap
 
