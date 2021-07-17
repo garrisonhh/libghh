@@ -9,7 +9,7 @@ add to a premake project using `include "PATH_TO_GHH_LIB_DIR"` and then `links {
 a dynamic array implementation, I definitely use it more like a stack
 
 ```c
-typedef struct array array_t;
+typedef struct ghh_array array_t;
 
 // instancing
 array_t *array_create(size_t initial_size);
@@ -33,12 +33,6 @@ void array_qsort(array_t *, int (*compare)(const void *, const void *));
 ## hashmap
 
 ```c
-#ifndef GHH_HASHMAP_H
-#define GHH_HASHMAP_H
-
-#include <stddef.h>
-#include <stdbool.h>
-
 typedef struct ghh_hashmap hashmap_t;
 typedef struct ghh_hmapiter hmapiter_t;
 
@@ -77,14 +71,12 @@ hmapiter_t *hmapiter_create(hashmap_t *);
 // free() to destroy
 
 bool hmapiter_next(hmapiter_t *, void **out_key, void **out_value);
-
-#endif
 ```
 
 ## heap
 
 ```c
-typedef struct heap heap_t;
+typedef struct ghh_heap heap_t;
 
 heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *));
 void heap_destroy(heap_t *, bool destroy_values);
@@ -101,8 +93,8 @@ void *heap_replace(heap_t *, void *item);
 ## list
 
 ```c
-typedef struct list list_t;
-typedef struct list_iter list_iter_t;
+typedef struct ghh_list list_t;
+typedef struct ghh_listiter listiter_t;
 
 // list
 list_t *list_create(void);
@@ -123,10 +115,10 @@ void *list_remove(list_t *, void *item);
 void list_merge(list_t *, list_t *other);
 
 // list iterator
-list_iter_t *list_iter_create(list_t *);
+listiter_t *list_iter_create(list_t *);
 
-void list_iter_reset(list_iter_t *);
-void *list_iter_next(list_iter_t *); // returns NULL when done
+void list_iter_reset(listiter_t *);
+void *list_iter_next(listiter_t *); // returns NULL when done
 ```
 
 - `list_merge()` pops all items from the second list and appends them to the first, but does not destroy the second list
