@@ -41,6 +41,8 @@ free(iterator);
 hmapiter_t *hmapiter_create(hashmap_t *);
 // free() to destroy
 
+void hmapiter_reset(hmapiter_t *);
+// returns whether not done
 bool hmapiter_next(hmapiter_t *, void **out_key, void **out_value);
 
 #endif

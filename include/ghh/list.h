@@ -28,9 +28,10 @@ void *list_remove(list_t *, void *item);
 void list_merge(list_t *, list_t *other);
 
 // list iterator
-listiter_t *list_iter_create(list_t *);
+listiter_t *listiter_create(list_t *);
 
-void list_iter_reset(listiter_t *);
-void *list_iter_next(listiter_t *); // returns NULL when done
+void listiter_reset(listiter_t *);
+// returns whether not done
+bool listiter_next(listiter_t *, void **out_value);
 
 #endif

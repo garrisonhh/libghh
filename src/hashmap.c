@@ -318,6 +318,10 @@ hmapiter_t *hmapiter_create(hashmap_t *hmap) {
 	return iter;
 }
 
+void hmapiter_reset(hmapiter_t *iter) {
+	iter->idx = -1;
+}
+
 // return whether iteration is not done
 bool hmapiter_next(hmapiter_t *iter, void **out_key, void **out_value) {
 	do {
