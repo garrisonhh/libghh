@@ -27,11 +27,17 @@ void *list_peek(list_t *);
 void *list_remove(list_t *, void *item);
 void list_merge(list_t *, list_t *other);
 
-// list iterator
+// list iterator (use LIST_FOREACH if you don't need any extra functionality)
 listiter_t *listiter_create(list_t *);
 
 void listiter_reset(listiter_t *);
 // returns whether not done
 bool listiter_next(listiter_t *, void **out_value);
+
+// this is a disgusting macro
+#define LIST_FOREACH(list, item) for (\
+    listiter_t *LIST_FE_ITER = listiter_create(list);\
+    listiter_next(LIST_FE_ITER, (void **)&item) ? true : (free(LIST_FE_ITER), false);\
+)
 
 #endif
