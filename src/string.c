@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include <ghh/mystring.h>
+#include <ghh/string.h>
 
 struct ghh_string {
 	char *data;
