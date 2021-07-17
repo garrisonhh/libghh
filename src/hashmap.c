@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h> // only for memcpy, don't use libc str functions when avoidable
 #include <ghh/hashmap.h>
+#include <ghh/utils.h>
 
 #if INTPTR_MAX == INT64_MAX
 
@@ -48,7 +49,7 @@ hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys) {
 	hmap->copy_keys = copy_keys;
 
 	hmap->size = 0;
-	hmap->min_size = initial_size < MIN_HASHMAP_SIZE ? initial_size : MIN_HASHMAP_SIZE;
+	hmap->min_size = MAX(initial_size, MIN_HASHMAP_SIZE);
 	hmap->alloc_size = hmap->min_size;
 	hmap->buckets = calloc(hmap->alloc_size, sizeof(*hmap->buckets));
 
@@ -135,7 +136,10 @@ static inline bool key_equals(hashmap_t *hmap, const void *key, const void *othe
 }
 
 // returns -1 if no bucket found
+#include <stdio.h>
 static inline int get_bucket_index(hashmap_t *hmap, const void *key, hash_t hash) {
+	printf("SIZES: %lu %lu\n", hmap->alloc_size, hash);
+
 	int index = hash % hmap->alloc_size;
 
 	while (hmap->buckets[index].filled) {
@@ -176,6 +180,9 @@ static inline hashbucket_t *hashmap_set_lower(hashmap_t *hmap, void *key, void *
 }
 
 static inline void rehash(hashmap_t *hmap, size_t new_size) {
+	if (new_size < hmap->min_size)
+		return;
+
 	hashbucket_t *old_buckets;
 	size_t old_size;
 
