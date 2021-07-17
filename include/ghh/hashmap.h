@@ -43,4 +43,12 @@ void hmapiter_reset(hmapiter_t *);
 // returns whether not done
 bool hmapiter_next(hmapiter_t *, void **out_key, void **out_value);
 
+#define HMAP_FOREACH(hmap, key, value) \
+void **HMAP_FE_KEY = key == NULL ? NULL : (void **)&key;\
+void **HMAP_FE_VAL = value == NULL ? NULL : (void **)&value;\
+for (\
+    hmapiter_t *HMAP_FE_ITER = hmapiter_create(hmap);\
+    hmapiter_next(HMAP_FE_ITER, HMAP_FE_KEY, HMAP_FE_VAL) ? true : (free(HMAP_FE_ITER), false);\
+)
+
 #endif

@@ -144,7 +144,7 @@ void *list_remove(list_t *list, void *item) {
 	}
 
 	if (trav != NULL) {
-		void *item;
+		void *removed;
 
 		if (trav == list->root) {
 			list->root = trav->next;
@@ -155,11 +155,11 @@ void *list_remove(list_t *list, void *item) {
 			last->next = trav->next;
 		}
 
-		item = trav->item;
+		removed = trav->item;
 		free(trav);
 		--list->size;
 
-		return item;
+		return removed;
 	}
 
 	return NULL;
