@@ -136,10 +136,7 @@ static inline bool key_equals(hashmap_t *hmap, const void *key, const void *othe
 }
 
 // returns -1 if no bucket found
-#include <stdio.h>
 static inline int get_bucket_index(hashmap_t *hmap, const void *key, hash_t hash) {
-	printf("SIZES: %lu %lu\n", hmap->alloc_size, hash);
-
 	int index = hash % hmap->alloc_size;
 
 	while (hmap->buckets[index].filled) {
@@ -296,25 +293,6 @@ void *hashmap_remove(hashmap_t *hmap, const void *key) {
 
 	return value;
 }
-
-// TODO REMOVE
-#include <stdio.h>
-void hashmap_debug(hashmap_t *hmap) {
-	printf("--- debug ---\n");
-	for (size_t i = 0; i < hmap->alloc_size; ++i) {
-		printf("%7lu\t<%d>", i, hmap->buckets[i].filled);
-
-		if (hmap->buckets[i].filled) {
-			printf(
-				"\t%d\t\"%s\" => %p\n",
-				hmap->buckets[i].desired_idx, (char *)hmap->buckets[i].key, hmap->buckets[i].value
-			);
-		} else {
-			printf("\n");
-		}
-	}
-}
-// TODO REMOVE ^^^
 
 hmapiter_t *hmapiter_create(hashmap_t *hmap) {
 	hmapiter_t *iter = malloc(sizeof(*iter));

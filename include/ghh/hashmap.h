@@ -21,8 +21,6 @@ void *hashmap_get(hashmap_t *, const void *key);
 void *hashmap_set(hashmap_t *, const void *key, const void *value);
 void *hashmap_remove(hashmap_t *, const void *key);
 
-void hashmap_debug(hashmap_t *); // TODO REMOVE
-
 // hashmap iterator
 
 /* usage:
