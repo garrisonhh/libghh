@@ -193,21 +193,20 @@ void list_iter_reset(listiter_t *iter) {
 }
 
 bool listiter_next(listiter_t *iter, void **out_value) {
-	if (iter->node == NULL) {
+	if (iter->node == NULL)
 		iter->node = iter->list->root;
-	} else {
-		if (iter->node == iter->list->tip) {
-			if (out_value != NULL)
-				*out_value = NULL;
-
-			return false;
-		}
-
+	else
 		iter->node = iter->node->next;
+
+	if (iter->node == NULL) {
+		if (out_value != NULL)
+			*out_value = NULL;
+
+		return false;
+	} else {
+		if (out_value != NULL)
+			*out_value = iter->node->item;
+
+		return true;
 	}
-
-	if (out_value != NULL)
-		*out_value = iter->node->item;
-
-	return true;
 }
