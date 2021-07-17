@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <ghh/timer.h>
+#include <ghh/gtimer.h>
 #include <ghh/utils.h>
 
 struct ghh_timer {

@@ -11,6 +11,7 @@
 #define M_PI (3.14159265358979323846)
 #endif
 
+// for 32-bit float
 #define EPSILON 0.000001
 
 #define MAX(a, b) (a > b ? a : b)
@@ -25,7 +26,6 @@
 
 #define INRANGE(x, a, b) (x >= a && x < b)
 
-// most useful god damn macros on the planet holy guacamole
 #define FOR_XY(x, y, mx, my) for (y = 0; y < my; ++y) for (x = 0; x < mx; ++x)
 #define FOR_XYZ(x, y, z, mx, my, mz) for (z = 0; z < mz; ++z) for (y = 0; y < my; ++y) for (x = 0; x < mx; ++x)
 #define FOR_CUBE(x, y, z, minv, maxv) for (z = minv; z < maxv; ++z) for (y = minv; y < maxv; ++y) for (x = minv; x < maxv; ++x)

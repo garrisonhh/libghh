@@ -4,10 +4,7 @@
 
 const float SQRT2 = sqrt(2.0);
 
-struct timeval LAST_TIMEIT = {
-	.tv_sec = 0,
-	.tv_usec = 0
-};
+struct timeval LAST_TIMEIT = {0};
 
 void timeit_start() {
 	gettimeofday(&LAST_TIMEIT, NULL);
