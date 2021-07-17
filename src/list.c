@@ -179,7 +179,7 @@ void list_merge(list_t *list, list_t *other) {
 	other->size = 0;
 }
 
-listiter_t *list_iter_create(list_t *list) {
+listiter_t *listiter_create(list_t *list) {
 	listiter_t *iter = malloc(sizeof(*iter));
 
 	iter->list = list;
