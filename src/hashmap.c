@@ -1,170 +1,342 @@
 #include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
+#include <stdint.h>
+#include <string.h> // only for memcpy, don't use libc str functions when avoidable
 #include <ghh/hashmap.h>
-#include <ghh/hashable.h>
 
-#define HASHKEY(hmap, key) (hmap->funcs.hash(key) % hmap->max_size)
+#if INTPTR_MAX == INT64_MAX
 
-#define BUCKET_MATCH(hmap, bucket, key, hash) (bucket.hash == hash && !hmap->funcs.cmp(bucket.key, key))
-#define FIND_BUCKET_IDX(hmap, key, hash, idx) {\
-	idx = hash;\
-	while (hmap->buckets[idx].key != NULL && !BUCKET_MATCH(hmap, hmap->buckets[idx], key, hash))\
-		idx = (idx + 1) % hmap->max_size;\
-}
+// 64 bit
+typedef uint64_t hash_t;
+#define FNV_PRIME 0x00000100000001b3
+#define FNV_BASIS 0xcbf29ce484222325
 
-// structs are typedef'd in header
-struct hashbucket_t {
+#else
+
+// 32 bit
+typedef uint32_t hash_t;
+#define FNV_PRIME 0x01000193a
+#define FNV_BASIS 0x811c9dc5
+
+#endif
+
+#define MIN_HASHMAP_SIZE 8
+
+typedef struct hashbucket {
+	bool filled;
+	int desired_idx;
 	hash_t hash;
-	const void *key, *value;
+	void *key, *value;
+} hashbucket_t;
+
+struct ghh_hashmap {
+	hashbucket_t *buckets;
+	size_t size, min_size, alloc_size;
+
+	int key_size;
+	bool copy_keys;
 };
 
-struct hashmap_iter_t {
+struct ghh_hmapiter {
 	hashmap_t *hmap;
-	int index;
+	int idx;
 };
 
-void hashmap_clear(hashmap_t *);
-void hashmap_rehash(hashmap_t *hmap, size_t new_size);
+hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys) {
+	hashmap_t *hmap = malloc(sizeof(*hmap));
 
-hashmap_t *hashmap_create(size_t initial_size, hashable_e hash_type) {
-	hashmap_t *hmap = malloc(sizeof(hashmap_t));
+	hmap->key_size = key_size;
+	hmap->copy_keys = copy_keys;
 
-	hmap->max_size = initial_size;
 	hmap->size = 0;
-	hmap->min_size = initial_size;
-
-	hmap->buckets = malloc(sizeof(hashbucket_t) * hmap->max_size);
-	hashmap_clear(hmap);
-
-	hmap->funcs = hashmap_funcs(hash_type);
+	hmap->min_size = initial_size < MIN_HASHMAP_SIZE ? initial_size : MIN_HASHMAP_SIZE;
+	hmap->alloc_size = hmap->min_size;
+	hmap->buckets = calloc(hmap->alloc_size, sizeof(*hmap->buckets));
 
 	return hmap;
 }
 
 void hashmap_destroy(hashmap_t *hmap, bool destroy_values) {
-	for (size_t i = 0; i < hmap->max_size; ++i) {
-		if (hmap->buckets[i].key != NULL) {
-			free((void *)hmap->buckets[i].key);
+	if (destroy_values)
+		for (size_t i = 0; i < hmap->alloc_size; ++i)
+			if (hmap->buckets[i].filled)
+				free(hmap->buckets[i].value);
 
-			if (destroy_values && hmap->buckets[i].value != NULL)
-				free((void *)hmap->buckets[i].value);
-		}
-	}
+	if (hmap->copy_keys)
+		for (size_t i = 0; i < hmap->alloc_size; ++i)
+			if (hmap->buckets[i].key != NULL)
+				free(hmap->buckets[i].key);
 
 	free(hmap->buckets);
 	free(hmap);
 }
 
-void hashmap_clear(hashmap_t *hmap) {
-	for (size_t i = 0; i < hmap->max_size; ++i) {
-		hmap->buckets[i].hash = 0;
-		hmap->buckets[i].key = NULL;
-		hmap->buckets[i].value = NULL;
-	}
+size_t hashmap_size(hashmap_t *hmap) {
+	return hmap->size;
 }
 
-void hashmap_set_lower(hashmap_t *hmap, const void *key, const void *value, bool copy) {
-	if (hmap->size > (hmap->max_size >> 1))
-		hashmap_rehash(hmap, hmap->max_size << 1);
+// fnv-1a hash function (http://isthe.com/chongo/tech/comp/fnv/)
+static inline hash_t hash_key(hashmap_t *hmap, const void *key) {
+	hash_t hash = FNV_BASIS;
+	const uint8_t *bytes = key;
 
-	hash_t idx, hash = HASHKEY(hmap, key);
+	if (hmap->key_size < 0) {
+		while (*bytes) {
+			hash ^= *bytes++;
+			hash *= FNV_PRIME;
+		}
+	} else {
+		for (int i = 0; i < hmap->key_size; ++i) {
+			hash ^= bytes[i];
+			hash *= FNV_PRIME;
+		}
+	}
 
-	FIND_BUCKET_IDX(hmap, key, hash, idx);
+	return hash;
+}
 
-	hmap->buckets[idx].value = value;
+static inline const void *copy_key(hashmap_t *hmap, const void *key) {
+	void *copied;
 
-	if (hmap->buckets[idx].key == NULL) {
-		hmap->buckets[idx].hash = hash;
-		hmap->buckets[idx].key = (copy ? hmap->funcs.copy(key) : key);
+	if (hmap->key_size < 0) {
+		size_t num_bytes = 1;
+		char *str = (char *)key;
+
+		while (*str++)
+			++num_bytes;
+
+		num_bytes *= sizeof(*str);
+
+		copied = malloc(num_bytes);
+		memcpy(copied, key, num_bytes);
+	} else {
+		copied = malloc(hmap->key_size);
+		memcpy(copied, key, hmap->key_size);
+	}
+
+	return copied;
+}
+
+static inline bool key_equals(hashmap_t *hmap, const void *key, const void *other) {
+	size_t i = 0;
+	const uint8_t *kbytes = key, *obytes = other;
+
+	if (hmap->key_size < 0) {
+		do {
+			if (kbytes[i] != obytes[i])
+				return false;
+		} while (kbytes[i++]);
+	} else {
+		for (; i < hmap->key_size; ++i)
+			if (kbytes[i] != obytes[i])
+				return false;
+	}
+
+	return true;
+}
+
+// returns -1 if no bucket found
+static inline int get_bucket_index(hashmap_t *hmap, const void *key, hash_t hash) {
+	int index = hash % hmap->alloc_size;
+
+	while (hmap->buckets[index].filled) {
+		if (hmap->buckets[index].hash == hash && key_equals(hmap, key, hmap->buckets[index].key))
+			break;
+
+		index = (index + 1) % hmap->alloc_size;
+	}
+
+	return index;
+}
+
+// returns old bucket, null if none found
+static inline hashbucket_t *hashmap_set_lower(hashmap_t *hmap, void *key, void *value, hash_t hash) {
+	int index;
+	hashbucket_t *bucket = NULL;
+
+	index = get_bucket_index(hmap, key, hash);
+
+	if (hmap->buckets[index].filled) {
+		bucket = malloc(sizeof(*bucket));
+		*bucket = hmap->buckets[index];
+	} else {
+		hmap->buckets[index].filled = true;
+		hmap->buckets[index].hash = hash;
 
 		++hmap->size;
 	}
+
+	hmap->buckets[index].key = key;
+	hmap->buckets[index].value = value;
+
+	// this is only needed every time for rehash.
+	// TODO should I use different set functions for rehash and set?
+	hmap->buckets[index].desired_idx = hash % hmap->alloc_size;
+
+	return bucket;
 }
 
-void hashmap_rehash(hashmap_t *hmap, size_t new_size) {
-	hashbucket_t *old_buckets = hmap->buckets;
-	size_t old_size = hmap->max_size;
+static inline void rehash(hashmap_t *hmap, size_t new_size) {
+	hashbucket_t *old_buckets;
+	size_t old_size;
+
+	old_buckets = hmap->buckets;
+	old_size = hmap->alloc_size;
 
 	hmap->size = 0;
-	hmap->max_size = new_size;
-	hmap->buckets = malloc(sizeof(hashbucket_t) * hmap->max_size);
+	hmap->alloc_size = new_size;
+	hmap->buckets = calloc(hmap->alloc_size, sizeof(*hmap->buckets));
 
-	hashmap_clear(hmap);
-
-	for (size_t i = 0; i < old_size; ++i)
-		if (old_buckets[i].key != NULL)
-			hashmap_set_lower(hmap, old_buckets[i].key, old_buckets[i].value, false);
+	for (size_t i = 0; i < old_size; ++i) {
+		if (old_buckets[i].filled) {
+			hashmap_set_lower(
+				hmap,
+				old_buckets[i].key,
+				old_buckets[i].value,
+				old_buckets[i].hash
+			);
+		}
+	}
 
 	free(old_buckets);
 }
 
 void *hashmap_get(hashmap_t *hmap, const void *key) {
-	hash_t idx, hash = HASHKEY(hmap, key);
+	hash_t hash;
+	int index;
 
-	FIND_BUCKET_IDX(hmap, key, hash, idx);
+	index = get_bucket_index(hmap, key, (hash = hash_key(hmap, key)));
 
-	return (hmap->buckets[idx].key == NULL ? NULL : (void *)hmap->buckets[idx].value);
+	return hmap->buckets[index].filled ? hmap->buckets[index].value : NULL;
 }
 
-void hashmap_set(hashmap_t *hmap, const void *key, const void *value) {
-	hashmap_set_lower(hmap, key, value, true);
+void *hashmap_set(hashmap_t *hmap, const void *key, const void *value) {
+	hashbucket_t *old_bucket;
+	void *out_value = NULL;
+
+	if (hmap->size >= (hmap->alloc_size >> 1))
+		rehash(hmap, hmap->alloc_size << 1);
+
+	if (hmap->copy_keys)
+		key = copy_key(hmap, key);
+
+	old_bucket = hashmap_set_lower(hmap, (void *)key, (void *)value, hash_key(hmap, key));
+
+	if (old_bucket != NULL) {
+		if (hmap->copy_keys)
+			free(old_bucket->key);
+
+		out_value = old_bucket->value;
+
+		free(old_bucket);
+	}
+
+	return out_value;
 }
 
 void *hashmap_remove(hashmap_t *hmap, const void *key) {
-	hash_t idx, hash = HASHKEY(hmap, key);
+	hash_t hash;
+	int index;
+	void *value = NULL;
 
-	FIND_BUCKET_IDX(hmap, key, hash, idx);
+	index = get_bucket_index(hmap, key, (hash = hash_key(hmap, key)));
 
-	if (hmap->buckets[idx].key == NULL) {
-		return NULL;
-	} else {
-		void *value = (void *)hmap->buckets[idx].value;
-		free((void *)hmap->buckets[idx].key);
+	if (hmap->buckets[index].filled) {
+		// filter up slots connected to this one
+		int last_index = index, desired;
+		bool filter;
 
-		hash_t last_slot = idx;
-		hashbucket_t *bucket;
+		value = hmap->buckets[index].value;
 
-		while (hmap->buckets[(idx = (idx + 1) % hmap->max_size)].key != NULL) {
-			bucket = &hmap->buckets[idx];
+		if (hmap->copy_keys)
+			free(hmap->buckets[index].key);
 
-			if ((bucket->hash < idx && (last_slot < idx && bucket->hash <= last_slot))
-			 || (bucket->hash > idx && ((last_slot > idx && bucket->hash <= last_slot) || last_slot < idx))) {
-				hmap->buckets[last_slot] = hmap->buckets[idx];
-				last_slot = idx;
+		while (1) {
+			// increment with wrap
+			index = (index + 1) % hmap->alloc_size;
+
+			// stop if an empty slot is reached
+			if (!hmap->buckets[index].filled)
+				break;
+
+			// flag whether to filter up
+			filter = false;
+			desired = hmap->buckets[index].desired_idx;
+
+			if (desired < index) { // no bucket wrap
+				if (last_index < index && desired <= last_index)
+					filter = true;
+			} else if (desired > index) { // bucket wrap
+				if (last_index < index || (/*last_index > index &&*/ desired <= last_index))
+					filter = true;
+			}
+
+			// filter up
+			if (filter) {
+				/*printf(
+					"filtering up %d <- %d (wants %d)\n",
+					last_index, index, hmap->buckets[index].desired_idx
+				);*/
+				hmap->buckets[last_index] = hmap->buckets[index];
+				last_index = index;
 			}
 		}
 
-		hmap->buckets[last_slot].hash = 0;
-		hmap->buckets[last_slot].key = NULL;
-		hmap->buckets[last_slot].value = NULL;
+		hmap->buckets[last_index].filled = false;
 
-		if (--hmap->size < (hmap->max_size >> 2)) {
-			hashmap_rehash(hmap, hmap->max_size >> 1);
-		}
-
-		return value;
+		if (--hmap->size < (hmap->alloc_size >> 2))
+			rehash(hmap, hmap->alloc_size >> 1);
 	}
+
+	return value;
 }
 
-hashmap_iter_t *hashmap_iter_create(hashmap_t *hmap) {
-	hashmap_iter_t *iter = malloc(sizeof(hashmap_iter_t));
+// TODO REMOVE
+#include <stdio.h>
+void hashmap_debug(hashmap_t *hmap) {
+	printf("--- debug ---\n");
+	for (size_t i = 0; i < hmap->alloc_size; ++i) {
+		printf("%7lu\t<%d>", i, hmap->buckets[i].filled);
+
+		if (hmap->buckets[i].filled) {
+			printf(
+				"\t%d\t\"%s\" => %p\n",
+				hmap->buckets[i].desired_idx, (char *)hmap->buckets[i].key, hmap->buckets[i].value
+			);
+		} else {
+			printf("\n");
+		}
+	}
+}
+// TODO REMOVE ^^^
+
+hmapiter_t *hmapiter_create(hashmap_t *hmap) {
+	hmapiter_t *iter = malloc(sizeof(*iter));
 
 	iter->hmap = hmap;
-	iter->index = 0;
+	iter->idx = -1;
 
 	return iter;
 }
 
-void hashmap_iter_reset(hashmap_iter_t *iter) {
-	iter->index = 0;
-}
-
-void *hashmap_iter_next(hashmap_iter_t *iter) {
+// return whether iteration is not done
+bool hmapiter_next(hmapiter_t *iter, void **out_key, void **out_value) {
 	do {
-		if (iter->hmap->buckets[iter->index].key != NULL)
-			return (void *)iter->hmap->buckets[iter->index++].value;
-	} while (++iter->index < iter->hmap->max_size);
+		if (++iter->idx >= iter->hmap->alloc_size) {
+			iter->idx = -1;
 
-	return NULL;
+			if (out_key != NULL)
+				*out_key = NULL;
+			if (out_value != NULL)
+				*out_value = NULL;
+
+			return false;
+		}
+	} while (!iter->hmap->buckets[iter->idx].filled);
+
+	if (out_key != NULL)
+		*out_key = iter->hmap->buckets[iter->idx].key;
+	if (out_value != NULL)
+		*out_value = iter->hmap->buckets[iter->idx].value;
+
+	return true;
 }
