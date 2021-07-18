@@ -43,17 +43,18 @@ void hmapiter_reset(hmapiter_t *);
 // returns whether not done
 bool hmapiter_next(hmapiter_t *, void **out_key, void **out_value);
 
-#define HMAP_FOREACH_KV(hmap, key, value) for (\
+#define HMAP_FOREACH_KV(key, value, hmap) for (\
     hmapiter_t *HMAP_FE_ITER = hmapiter_create(hmap);\
-    hmapiter_next(HMAP_FE_ITER, (void **)&key, (void **)&value) ? true : (free(HMAP_FE_ITER), false);\
+    hmapiter_next(HMAP_FE_ITER, (void **)&key, (void **)&value)\
+        ? true : (free(HMAP_FE_ITER), false);\
 )
 
-#define HMAP_FOREACH_K(hmap, key) for (\
+#define HMAP_FOREACH_K(key, hmap) for (\
     hmapiter_t *HMAP_FE_ITER = hmapiter_create(hmap);\
     hmapiter_next(HMAP_FE_ITER, (void **)&key, NULL) ? true : (free(HMAP_FE_ITER), false);\
 )
 
-#define HMAP_FOREACH_V(hmap, value) for (\
+#define HMAP_FOREACH_V(value, hmap) for (\
     hmapiter_t *HMAP_FE_ITER = hmapiter_create(hmap);\
     hmapiter_next(HMAP_FE_ITER, NULL, (void **)&value) ? true : (free(HMAP_FE_ITER), false);\
 )

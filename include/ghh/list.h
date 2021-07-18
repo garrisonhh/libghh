@@ -35,7 +35,7 @@ void listiter_reset(listiter_t *);
 bool listiter_next(listiter_t *, void **out_value);
 
 // this is a disgusting macro
-#define LIST_FOREACH(list, item) for (\
+#define LIST_FOREACH(item, list) for (\
     listiter_t *LIST_FE_ITER = listiter_create(list);\
     listiter_next(LIST_FE_ITER, (void **)&item) ? true : (free(LIST_FE_ITER), false);\
 )
