@@ -62,7 +62,7 @@ void print_bits(const char *message, unsigned n, size_t bits);
 	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
 	fprintf(stderr, __VA_ARGS__ /* error here because of comma? use ERROR0 */ );\
 	exit(-1);\
-} while (0s)
+} while (0)
 
 #define ERROR0(msg) do {\
 	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
