@@ -20,3 +20,11 @@ project "ghh"
 		makesettings { "CC=gcc" }
 		links { "mingw32" }
 	end
+
+	filter "configurations:debug"
+		defines { "DEBUG" }
+		symbols "On"
+
+	filter "configurations:release"
+		defines { "NDEBUG" }
+		optimize "On"
