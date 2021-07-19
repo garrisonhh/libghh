@@ -22,6 +22,7 @@
 #define CLAMP(x, a, b) (MAX(MIN(x, b), a))
 #define INRANGE(x, a, b) ((x) >= (a) && (x) < (b))
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(*arr))
+#define CONCAT(a, b) a##b
 
 // loops
 #define FOR_XY(x, y, mx, my) for (y = 0; y < my; ++y) for (x = 0; x < mx; ++x)
@@ -33,41 +34,41 @@
 #define BIT_SET_TRUE(bitfield, index) {bitfield |= (0x1 << (index));}
 #define BIT_SET_FALSE(bitfield, index) {bitfield &= ~(0x1 << (index));}
 
-#define BIT_SET_COND(bitfield, index, cond) {\
+#define BIT_SET_COND(bitfield, index, cond) do {\
 	if (cond) \
 		BIT_SET_TRUE(bitfield, index) \
 	else \
 		BIT_SET_FALSE(bitfield, index) \
-}
+} while (0)
 
 void print_bits(const char *message, unsigned n, size_t bits);
 
 // swap
-#define SWAP(a, b, temp) {\
+#define SWAP(a, b, temp) do {\
 	temp = a;\
 	a = b;\
 	b = temp;\
-}
+} while (0)
 
 // swp is bool/unsigned/int
-#define BIT_SET_SWAP(bitfield, index1, index2, swp) {\
+#define BIT_SET_SWAP(bitfield, index1, index2, swp) do {\
 	swp = BIT_GET(bitfield, index1);\
 	BIT_SET_COND(bitfield, index1, BIT_GET(bitfield, index2));\
 	BIT_SET_COND(bitfield, index2, swp);\
-}
+} while (0)
 
 // errors
-#define ERROR(msg, ...) {\
+#define ERROR(msg, ...) do {\
 	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
 	fprintf(stderr, __VA_ARGS__ /* error here because of comma? use ERROR0 */ );\
 	exit(-1);\
-}
+} while (0s)
 
-#define ERROR0(msg) {\
+#define ERROR0(msg) do {\
 	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
 	fprintf(stderr, msg);\
 	exit(-1);\
-}
+} while(0)
 
 // float stuff
 #define EPSILON	0.000001
