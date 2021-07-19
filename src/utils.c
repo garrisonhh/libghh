@@ -2,8 +2,6 @@
 #include <sys/time.h>
 #include <ghh/utils.h>
 
-const float SQRT2 = sqrt(2.0);
-
 struct timeval LAST_TIMEIT = {0};
 
 void timeit_start() {
@@ -59,29 +57,4 @@ void print_bits(const char *message, unsigned n, size_t bits) {
 		printf("%u", BIT_GET(n, i));
 
 	printf("\n");
-}
-
-void term_set_bg(int color) {
-	int r, g, b;
-
-	r = 0;
-	g = MAX(color - 64, 0);
-	b = MAX(192 - color, 0);
-
-	printf("\e[48;2;%i;%i;%im", r, g, b);
-}
-
-void term_set_fg(int color) {
-	int r, g, b;
-
-	r = 0;
-	g = MAX(color - 64, 0);
-	b = MAX(192 - color, 0);
-
-	printf("\e[38;2;%i;%i;%im", r, g, b);
-
-}
-
-void term_reset_color() {
-	printf("\e[0m");
 }

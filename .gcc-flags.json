@@ -1,6 +1,6 @@
 {
   "execPath": "gcc",
-  "gccDefaultCFlags": "-Wall -std=c99 -c",
+  "gccDefaultCFlags": "-Wall -pedantic-errors -std=c99 -c",
   "gccErrorLimit": -1,
   "gccSuppressWarnings": true,
   "gccIncludePaths" : "./include/"

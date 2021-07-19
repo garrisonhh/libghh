@@ -2,6 +2,7 @@ project "ghh"
 	kind "StaticLib"
 	language "C"
 	cdialect "c99"
+	buildoptions { "-pedantic" }
 
 	targetdir ("bin/%{prj.name}")
 	objdir ("obj/%{prj.name}")
