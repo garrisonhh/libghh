@@ -1,7 +1,9 @@
+#define GHH_LIB_INTERNAL
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <ghh/list.h>
+#include <ghh/memcheck.h>
 
 typedef struct list_node {
 	void *item;
@@ -19,7 +21,7 @@ struct ghh_listiter {
 };
 
 list_t *list_create() {
-	list_t *list = malloc(sizeof(*list));
+	list_t *list = MALLOC(sizeof(*list));
 
 	list->root = NULL;
 	list->tip = NULL;
@@ -38,12 +40,12 @@ void list_destroy(list_t *list, bool destroy_values) {
 		trav = trav->next;
 
 		if (destroy_values)
-			free(last->item);
+			FREE(last->item);
 
-		free(last);
+		FREE(last);
 	}
 
-	free(list);
+	FREE(list);
 }
 
 size_t list_size(list_t *list) {
@@ -74,7 +76,7 @@ void *list_get(list_t *list, size_t index) {
 }
 
 void list_push(list_t *list, void *item) {
-	listnode_t *node = malloc(sizeof(listnode_t));
+	listnode_t *node = MALLOC(sizeof(listnode_t));
 
 	node->item = item;
 
@@ -91,7 +93,7 @@ void list_push(list_t *list, void *item) {
 }
 
 void list_append(list_t *list, void *item) {
-	listnode_t *node = malloc(sizeof(listnode_t));
+	listnode_t *node = MALLOC(sizeof(listnode_t));
 
 	node->item = item;
 	node->next = NULL;
@@ -120,7 +122,7 @@ void *list_pop(list_t *list) {
 	item = old_root->item;
 	list->root = old_root->next;
 
-	free(old_root);
+	FREE(old_root);
 
 	if (--list->size == 0)
 		list->tip = NULL;
@@ -156,7 +158,7 @@ void *list_remove(list_t *list, void *item) {
 		}
 
 		removed = trav->item;
-		free(trav);
+		FREE(trav);
 		--list->size;
 
 		return removed;
@@ -180,7 +182,7 @@ void list_merge(list_t *list, list_t *other) {
 }
 
 listiter_t *listiter_create(list_t *list) {
-	listiter_t *iter = malloc(sizeof(*iter));
+	listiter_t *iter = MALLOC(sizeof(*iter));
 
 	iter->list = list;
 	iter->node = NULL;

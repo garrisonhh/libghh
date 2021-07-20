@@ -1,7 +1,9 @@
+#define GHH_LIB_INTERNAL
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <ghh/heap.h>
+#include <ghh/memcheck.h>
 
 struct ghh_heap {
 	void **items;
@@ -10,11 +12,11 @@ struct ghh_heap {
 };
 
 heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *)) {
-	heap_t *heap = malloc(sizeof(heap_t));
+	heap_t *heap = MALLOC(sizeof(heap_t));
 
 	heap->max_size = (1 << initial_depth) - 1;
 	heap->size = 0;
-	heap->items = malloc(heap->max_size * sizeof(void *));
+	heap->items = MALLOC(heap->max_size * sizeof(void *));
 	heap->compare = compare;
 
 	for (size_t i = 0; i < heap->max_size; i++)
@@ -26,10 +28,10 @@ heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *
 void heap_destroy(heap_t *heap, bool destroy_values) {
 	if (destroy_values)
 		for (size_t i = 0; i < heap->max_size; i++)
-			free(heap->items[i]);
+			FREE(heap->items[i]);
 
-	free(heap->items);
-	free(heap);
+	FREE(heap->items);
+	FREE(heap);
 }
 
 size_t heap_size(heap_t *heap) {
@@ -89,7 +91,7 @@ void heap_insert(heap_t *heap, void *item) {
 
 	if (++heap->size == heap->max_size) {
 		heap->max_size = (heap->max_size << 1) | 1;
-		heap->items = realloc(heap->items, sizeof(void *) * heap->max_size);
+		heap->items = REALLOC(heap->items, sizeof(void *) * heap->max_size);
 	}
 }
 

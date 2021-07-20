@@ -1,6 +1,8 @@
+#define GHH_LIB_INTERNAL
 #include <stdio.h>
 #include <sys/time.h>
 #include <ghh/utils.h>
+#include <ghh/memcheck.h>
 
 struct timeval LAST_TIMEIT = {0};
 

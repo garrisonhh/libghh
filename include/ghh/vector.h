@@ -1,8 +1,11 @@
 #ifndef GHH_VECTOR_H
 #define GHH_VECTOR_H
 
+#define GHH_LIB_INTERNAL
 #include <stdlib.h>
 #include <ghh/utils.h>
+#include <ghh/memcheck.h>
+#undef GHH_LIB_INTERNAL
 
 /*
 sometimes you want a dynamic array, but using array_t would require a lot of
@@ -56,7 +59,7 @@ VECTOR_FREE(v); // cleanup
     vec = ghh_vector_create(initial_size, sizeof(*vec))\
 )
 
-#define VECTOR_FREE(vec) free(VECTOR_DATA(vec))
+#define VECTOR_FREE(vec) FREE(VECTOR_DATA(vec))
 
 #define VECTOR_CLEAR(vec) do {\
     size_t min_size = VECTOR_DATA(vec)->min_size;\
@@ -91,7 +94,7 @@ static inline void *ghh_vector_create(size_t initial_size, size_t item_size) {
 
     initial_size = MAX(GHH_MIN_VECTOR_SIZE, initial_size);
 
-    vec = malloc(sizeof(ghh_vector_data_t) + (initial_size * item_size));
+    vec = MALLOC(sizeof(ghh_vector_data_t) + (initial_size * item_size));
     ++vec;
 
     VECTOR_SIZE(vec) = 0;
@@ -108,7 +111,7 @@ static inline void *ghh_vector_check_expand(void *vec) {
         size_t new_size = VECTOR_ALLOC_SIZE(vec) * VECTOR_DATA(vec)->item_size;
         new_size += sizeof(ghh_vector_data_t);
 
-        vec = (ghh_vector_data_t *)realloc(VECTOR_DATA(vec), new_size) + 1;
+        vec = (ghh_vector_data_t *)REALLOC(VECTOR_DATA(vec), new_size) + 1;
     }
 
     return vec;
@@ -122,7 +125,7 @@ static inline void *ghh_vector_check_shrink(void *vec) {
         size_t new_size = VECTOR_ALLOC_SIZE(vec) * VECTOR_DATA(vec)->item_size;
         new_size += sizeof(ghh_vector_data_t);
 
-        vec = (ghh_vector_data_t *)realloc(VECTOR_DATA(vec), new_size) + 1;
+        vec = (ghh_vector_data_t *)REALLOC(VECTOR_DATA(vec), new_size) + 1;
     }
 
     return vec;

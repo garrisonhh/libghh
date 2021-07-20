@@ -1,6 +1,8 @@
+#define GHH_LIB_INTERNAL
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ghh/array.h>
+#include <ghh/memcheck.h>
 
 struct ghh_array {
 	void **items;
@@ -8,12 +10,12 @@ struct ghh_array {
 };
 
 array_t *array_create(size_t initial_size) {
-	array_t *array = malloc(sizeof(*array));
+	array_t *array = MALLOC(sizeof(*array));
 
 	array->size = 0;
 	array->min_size = (initial_size < 4 ? 4 : initial_size);
 	array->alloc_size = array->min_size;
-	array->items = malloc(array->alloc_size * sizeof(void *));
+	array->items = MALLOC(array->alloc_size * sizeof(void *));
 
 	return array;
 }
@@ -21,10 +23,10 @@ array_t *array_create(size_t initial_size) {
 void array_destroy(array_t *array, bool destroy_values) {
 	if (destroy_values)
 		for (size_t i = 0; i < array->size; i++)
-			free(array->items[i]);
+			FREE(array->items[i]);
 
-	free(array->items);
-	free(array);
+	FREE(array->items);
+	FREE(array);
 }
 
 size_t array_size(array_t *array) {
@@ -42,7 +44,7 @@ void *array_raw(array_t *array) {
 void array_push(array_t *array, void *item) {
 	if (array->size == array->alloc_size) {
 		array->alloc_size <<= 1;
-		array->items = realloc(array->items, sizeof(void *) * array->alloc_size);
+		array->items = REALLOC(array->items, sizeof(void *) * array->alloc_size);
 	}
 
 	array->items[array->size++] = item;
@@ -53,7 +55,7 @@ void *array_pop(array_t *array) {
 
 	if (array->size < (array->alloc_size >> 1)) {
 		array->alloc_size >>= 1;
-		array->items = realloc(array->items, sizeof(void *) * array->alloc_size);
+		array->items = REALLOC(array->items, sizeof(void *) * array->alloc_size);
 	}
 
 	return value;
@@ -73,7 +75,7 @@ void *array_del(array_t *array, size_t index) {
 
 	if (array->alloc_size > array->min_size && array->size < array->alloc_size >> 1) {
 		array->alloc_size >>= 1;
-		array->items = realloc(array->items, sizeof(void *) * array->alloc_size);
+		array->items = REALLOC(array->items, sizeof(void *) * array->alloc_size);
 	}
 
 	return item;
@@ -82,13 +84,13 @@ void *array_del(array_t *array, size_t index) {
 void array_clear(array_t *array, bool destroy_values) {
 	if (destroy_values)
 		for (size_t i = 0; i < array->size; i++)
-			free(array->items[i]);
+			FREE(array->items[i]);
 
 	array->size = 0;
 	array->alloc_size = array->min_size;
 
-	free(array->items);
-	array->items = malloc(sizeof(void *) * array->alloc_size);
+	FREE(array->items);
+	array->items = MALLOC(sizeof(void *) * array->alloc_size);
 }
 
 void array_qsort(array_t *array, int (*compare)(const void *, const void *)) {
