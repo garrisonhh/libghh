@@ -58,17 +58,11 @@ void print_bits(const char *message, unsigned n, size_t bits);
 } while (0)
 
 // errors
-#define ERROR(msg, ...) do {\
+#define ERROR(...) do {\
 	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
 	fprintf(stderr, __VA_ARGS__ /* error here because of comma? use ERROR0 */ );\
 	exit(-1);\
 } while (0)
-
-#define ERROR0(msg) do {\
-	fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
-	fprintf(stderr, msg);\
-	exit(-1);\
-} while(0)
 
 // float stuff
 #define EPSILON	0.000001
