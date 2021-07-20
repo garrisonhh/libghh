@@ -10,13 +10,13 @@ struct ghh_string {
 };
 
 string_t *string_create(const char *initial_str) {
-	string_t *str = MALLOC(sizeof(*str));
+	string_t *str = gmalloc(sizeof(*str));
 
 	if (initial_str == NULL)
 		initial_str = "";
 
 	str->length = strlen(initial_str);
-	str->data = MALLOC(sizeof(char) * (str->length + 1));
+	str->data = gmalloc(sizeof(char) * (str->length + 1));
 
 	strcpy(str->data, initial_str);
 
@@ -24,8 +24,8 @@ string_t *string_create(const char *initial_str) {
 }
 
 void string_destroy(string_t *str) {
-	FREE(str->data);
-	FREE(str);
+	gfree(str->data);
+	gfree(str);
 }
 
 size_t string_length(string_t *str) {
@@ -37,7 +37,7 @@ char *string_raw(string_t *str) {
 }
 
 char *string_copy(string_t *str) {
-	char *copy = MALLOC(sizeof(char) * (str->length + 1));
+	char *copy = gmalloc(sizeof(char) * (str->length + 1));
 
 	strcpy(copy, str->data);
 
@@ -45,10 +45,10 @@ char *string_copy(string_t *str) {
 }
 
 void string_set(string_t *str, const char *data) {
-	FREE(str->data);
+	gfree(str->data);
 
 	str->length = strlen(data);
-	str->data = MALLOC(sizeof(char) * (str->length + 1));
+	str->data = gmalloc(sizeof(char) * (str->length + 1));
 
 	strcpy(str->data, data);
 }
@@ -57,7 +57,7 @@ void string_append(string_t *str, const char *other) {
 	size_t old_len = str->length;
 
 	str->length += strlen(other);
-	str->data = REALLOC(str->data, str->length + 1);
+	str->data = grealloc(str->data, str->length + 1);
 
 	strcpy(str->data + old_len, other);
 }
@@ -79,9 +79,9 @@ void string_replace(string_t *str, const char *substr, const char *replacement) 
 		}
 	}
 
-	FREE(str->data);
+	gfree(str->data);
 
 	str->data = new_str->data;
 
-	FREE(new_str);
+	gfree(new_str);
 }

@@ -12,13 +12,13 @@ struct ghh_timer {
 };
 
 gtimer_t *gtimer_create(size_t len_tracked) {
-	gtimer_t *timer = MALLOC(sizeof(gtimer_t));
+	gtimer_t *timer = gmalloc(sizeof(gtimer_t));
 
 	timer->this_tick = 0;
 	timer->len_tracked = len_tracked;
 	timer->tracked_idx = 0;
 
-	timer->tracked = MALLOC(sizeof(double) * timer->len_tracked);
+	timer->tracked = gmalloc(sizeof(double) * timer->len_tracked);
 
 	for (size_t i = 0; i < timer->len_tracked; ++i)
 		timer->tracked[i] = 0.0;
@@ -29,8 +29,8 @@ gtimer_t *gtimer_create(size_t len_tracked) {
 }
 
 void gtimer_destroy(gtimer_t *timer) {
-	FREE(timer->tracked);
-	FREE(timer);
+	gfree(timer->tracked);
+	gfree(timer);
 }
 
 void gtimer_tick(gtimer_t *timer) {
