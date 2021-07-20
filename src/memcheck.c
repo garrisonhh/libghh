@@ -4,6 +4,8 @@
 #include <ghh/string.h>
 #include <ghh/array.h>
 
+// *** DO NOT INCLUDE <ghh/memcheck.h> ***
+
 hashmap_t *mem_active = NULL;
 array_t *mem_inactive = NULL;
 array_t *mem_unmatched = NULL;
@@ -26,7 +28,7 @@ void memcheck_quit() {
     for (i = 0; i < array_size(mem_unmatched); ++i) {
         entry = array_get(mem_unmatched, i);
         printf(
-            "MEMCHECK: unmatched free at %s:%d\n",
+            "GHH_MEMCHECK: unmatched free at %s:%d\n",
             string_raw(entry->file), entry->line
         );
     }
@@ -34,11 +36,11 @@ void memcheck_quit() {
     if (hashmap_size(mem_active)) {
         HMAP_FOREACH_V(entry, mem_active)
             printf(
-                "MEMCHECK: unfreed allocation at %s:%d\n",
+                "GHH_MEMCHECK: unfreed allocation at %s:%d\n",
                 string_raw(entry->file), entry->line
             );
     } else {
-        printf("MEMCHECK: all matched allocations freed\n");
+        printf("GHH_MEMCHECK: all matched allocations freed\n");
     }
 
     HMAP_FOREACH_V(entry, mem_active)
