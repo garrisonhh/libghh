@@ -12,7 +12,8 @@ void array_destroy(array_t *, bool destroy_values);
 
 // data access
 size_t array_size(array_t *);
-void *array_get(array_t *, int index);
+void *array_get(array_t *, size_t index);
+void *array_raw(array_t *); // don't use this unless you know what you're doing
 
 // stack ops
 void array_push(array_t *, void *item);
@@ -20,7 +21,7 @@ void *array_pop(array_t *);
 void *array_peek(array_t *);
 
 // array ops
-void *array_del(array_t *, int index);
+void *array_del(array_t *, size_t index);
 void array_clear(array_t *, bool destroy_values);
 void array_qsort(array_t *, int (*compare)(const void *, const void *));
 

@@ -31,8 +31,12 @@ size_t array_size(array_t *array) {
 	return array->size;
 }
 
-void *array_get(array_t *array, int index) {
+void *array_get(array_t *array, size_t index) {
 	return array->items[index];
+}
+
+void *array_raw(array_t *array) {
+	return array->items;
 }
 
 void array_push(array_t *array, void *item) {
@@ -59,11 +63,11 @@ void *array_peek(array_t *array) {
 	return array->items[array->size - 1];
 }
 
-void *array_del(array_t *array, int index) {
+void *array_del(array_t *array, size_t index) {
 	void *item = array->items[index];
 
-	for (int i = index + 1; i < array->size; ++i)
-		array->items[i - 1] = array->items[i];
+	for (size_t i = index; i < array->size - 1; ++i)
+		array->items[i] = array->items[i + 1];
 
 	--array->size;
 
