@@ -7,85 +7,63 @@
 // *** DO NOT INCLUDE <ghh/memcheck.h> ***
 
 hashmap_t *mem_active = NULL;
-array_t *mem_inactive = NULL;
-array_t *mem_unmatched = NULL;
-
-typedef struct memlog_entry {
-    string_t *file;
-    int line;
-} memlog_entry_t;
+hashmap_t *mem_inactive = NULL;
 
 void memcheck_init() {
-    mem_active = hashmap_create(0, sizeof(void *), true);
-    mem_inactive = array_create(0);
-    mem_unmatched = array_create(0);
+    mem_active = hashmap_create(0, -1, true);
+    mem_inactive = hashmap_create(0, -1, true);
 }
 
 void memcheck_quit() {
-    memlog_entry_t *entry;
-    size_t i;
+    char *entry;
+    size_t *size;
 
-    for (i = 0; i < array_size(mem_unmatched); ++i) {
-        entry = array_get(mem_unmatched, i);
-        printf(
-            "GHH_MEMCHECK: unmatched free at %s:%d\n",
-            string_raw(entry->file), entry->line
-        );
-    }
+    HMAP_FOREACH_KV(entry, size, mem_active)
+        printf("GHH_MEMCHECK: %lu bytes unfreed at %s.\n", *size, entry);
 
-    if (hashmap_size(mem_active)) {
-        HMAP_FOREACH_V(entry, mem_active)
-            printf(
-                "GHH_MEMCHECK: unfreed allocation at %s:%d\n",
-                string_raw(entry->file), entry->line
-            );
-    } else {
-        printf("GHH_MEMCHECK: all matched allocations freed\n");
-    }
-
-    HMAP_FOREACH_V(entry, mem_active)
-        string_destroy(entry->file);
-
-    for (i = 0; i < array_size(mem_inactive); ++i) {
-        entry = array_get(mem_inactive, i);
-        string_destroy(entry->file);
-    }
-
-    for (i = 0; i < array_size(mem_unmatched); ++i) {
-        entry = array_get(mem_unmatched, i);
-        string_destroy(entry->file);
+    HMAP_FOREACH_KV(entry, size, mem_inactive) {
+        if (size == NULL)
+            printf("GHH_MEMCHECK: unmatched free at %s.\n", entry);
+        else
+            printf("freed %lu at %s.\n", *size, entry);
     }
 
     hashmap_destroy(mem_active, true);
-    array_destroy(mem_inactive, true);
-    array_destroy(mem_unmatched, true);
+    hashmap_destroy(mem_inactive, true);
+}
+
+static inline void gen_entry(char *str, const char *file, const int line) {
+    sprintf(str, "%s:%d", file, line);
 }
 
 void *ghh_alloc(size_t size, const char *file, const int line) {
-    void *ptr = calloc(1, size);
-    memlog_entry_t *entry = malloc(sizeof(*entry));
+    char entry[250];
+    size_t *prev_size;
 
-    entry->file = string_create(file);
-    entry->line = line;
+    gen_entry(entry, file, line);
 
-    hashmap_set(mem_active, &ptr, entry);
+    if ((prev_size = hashmap_get(mem_active, entry)) != NULL) {
+        *prev_size += size;
+    } else {
+        prev_size = malloc(sizeof(*prev_size));
+        *prev_size = size;
+    }
 
-    return ptr;
+    hashmap_set(mem_active, entry, prev_size);
+
+    return malloc(size);
 }
 
 void ghh_free(void *ptr, const char *file, const int line) {
-    memlog_entry_t *entry;
+    size_t *prev_size;
+    char entry[250];
 
-    if ((entry = hashmap_remove(mem_active, &ptr)) != NULL) {
-        array_push(mem_inactive, entry);
-    } else {
-        entry = malloc(sizeof(*entry));
+    gen_entry(entry, file, line);
 
-        entry->file = string_create(file);
-        entry->line = line;
-
-        array_push(mem_unmatched, entry);
-    }
+    if ((prev_size = hashmap_remove(mem_active, entry)) != NULL)
+        hashmap_set(mem_inactive, entry, prev_size);
+    else
+        hashmap_set(mem_inactive, entry, NULL);
 
     free(ptr);
 }
