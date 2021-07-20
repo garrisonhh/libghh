@@ -5,9 +5,16 @@
 #include <ghh/utils.h>
 
 /*
-sometimes you want a dynamic array, but using an array_t is overkill or
-inconvenient with all of the memory management, etc. vector.h is a solution
-for those cases.
+sometimes you want a dynamic array, but using array_t would require a lot of
+expensive malloc's, or you're using primitives. vectors are the solution for
+this.
+
+- vectors are 3-4x faster than arrays for a pushing/popping a list of primitives
+    - vectors also require no casting on data access
+- vectors are slightly slower than arrays for pointers
+    - since array_t's have more functionality, might as well use them anyways
+- vectors are very slow with larger structs, lots of data copying
+    - you can make an array of pointers, but you might as well just use an array_t
 */
 
 // example usage
@@ -16,7 +23,7 @@ for those cases.
 float *v;
 int i;
 
-VECTOR_ALLOC(v, 5); // initialize v with size of 5
+VECTOR_ALLOC(v, 5); // allocate v with size of 5
 
 printf("initial size: %lu\n", VECTOR_ALLOC_SIZE(v));
 
@@ -81,6 +88,8 @@ typedef struct ghh_vector_data {
 
 static inline void *ghh_vector_create(size_t initial_size, size_t item_size) {
     ghh_vector_data_t *vec;
+
+    initial_size = MAX(GHH_MIN_VECTOR_SIZE, initial_size);
 
     vec = malloc(sizeof(ghh_vector_data_t) + (initial_size * item_size));
     ++vec;
