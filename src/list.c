@@ -21,7 +21,7 @@ struct ghh_listiter {
 };
 
 list_t *list_create() {
-	list_t *list = gmalloc(sizeof(*list));
+	list_t *list = malloc(sizeof(*list));
 
 	list->root = NULL;
 	list->tip = NULL;
@@ -40,12 +40,12 @@ void list_destroy(list_t *list, bool destroy_values) {
 		trav = trav->next;
 
 		if (destroy_values)
-			gfree(last->item);
+			free(last->item);
 
-		gfree(last);
+		free(last);
 	}
 
-	gfree(list);
+	free(list);
 }
 
 size_t list_size(list_t *list) {
@@ -76,7 +76,7 @@ void *list_get(list_t *list, size_t index) {
 }
 
 void list_push(list_t *list, void *item) {
-	listnode_t *node = gmalloc(sizeof(listnode_t));
+	listnode_t *node = malloc(sizeof(listnode_t));
 
 	node->item = item;
 
@@ -93,7 +93,7 @@ void list_push(list_t *list, void *item) {
 }
 
 void list_append(list_t *list, void *item) {
-	listnode_t *node = gmalloc(sizeof(listnode_t));
+	listnode_t *node = malloc(sizeof(listnode_t));
 
 	node->item = item;
 	node->next = NULL;
@@ -122,7 +122,7 @@ void *list_pop(list_t *list) {
 	item = old_root->item;
 	list->root = old_root->next;
 
-	gfree(old_root);
+	free(old_root);
 
 	if (--list->size == 0)
 		list->tip = NULL;
@@ -158,7 +158,7 @@ void *list_remove(list_t *list, void *item) {
 		}
 
 		removed = trav->item;
-		gfree(trav);
+		free(trav);
 		--list->size;
 
 		return removed;
@@ -182,7 +182,7 @@ void list_merge(list_t *list, list_t *other) {
 }
 
 listiter_t *listiter_create(list_t *list) {
-	listiter_t *iter = gmalloc(sizeof(*iter));
+	listiter_t *iter = malloc(sizeof(*iter));
 
 	iter->list = list;
 	iter->node = NULL;

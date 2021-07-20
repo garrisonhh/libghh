@@ -45,7 +45,7 @@ struct ghh_hmapiter {
 };
 
 hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys) {
-	hashmap_t *hmap = gmalloc(sizeof(*hmap));
+	hashmap_t *hmap = malloc(sizeof(*hmap));
 
 	hmap->key_size = key_size;
 	hmap->copy_keys = copy_keys;
@@ -53,7 +53,7 @@ hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys) {
 	hmap->size = 0;
 	hmap->min_size = MAX(initial_size, MIN_HASHMAP_SIZE);
 	hmap->alloc_size = hmap->min_size;
-	hmap->buckets = gcalloc(hmap->alloc_size, sizeof(*hmap->buckets));
+	hmap->buckets = calloc(hmap->alloc_size, sizeof(*hmap->buckets));
 
 	return hmap;
 }
@@ -62,15 +62,15 @@ void hashmap_destroy(hashmap_t *hmap, bool destroy_values) {
 	if (destroy_values)
 		for (size_t i = 0; i < hmap->alloc_size; ++i)
 			if (hmap->buckets[i].filled)
-				gfree(hmap->buckets[i].value);
+				free(hmap->buckets[i].value);
 
 	if (hmap->copy_keys)
 		for (size_t i = 0; i < hmap->alloc_size; ++i)
 			if (hmap->buckets[i].key != NULL)
-				gfree(hmap->buckets[i].key);
+				free(hmap->buckets[i].key);
 
-	gfree(hmap->buckets);
-	gfree(hmap);
+	free(hmap->buckets);
+	free(hmap);
 }
 
 size_t hashmap_size(hashmap_t *hmap) {
@@ -109,10 +109,10 @@ static inline const void *copy_key(hashmap_t *hmap, const void *key) {
 
 		num_bytes *= sizeof(*str);
 
-		copied = gmalloc(num_bytes);
+		copied = malloc(num_bytes);
 		memcpy(copied, key, num_bytes);
 	} else {
-		copied = gmalloc(hmap->key_size);
+		copied = malloc(hmap->key_size);
 		memcpy(copied, key, hmap->key_size);
 	}
 
@@ -159,7 +159,7 @@ static inline hashbucket_t *hashmap_set_lower(hashmap_t *hmap, void *key, void *
 	index = get_bucket_index(hmap, key, hash);
 
 	if (hmap->buckets[index].filled) {
-		bucket = gmalloc(sizeof(*bucket));
+		bucket = malloc(sizeof(*bucket));
 		*bucket = hmap->buckets[index];
 	} else {
 		hmap->buckets[index].filled = true;
@@ -190,7 +190,7 @@ static inline void rehash(hashmap_t *hmap, size_t new_size) {
 
 	hmap->size = 0;
 	hmap->alloc_size = new_size;
-	hmap->buckets = gcalloc(hmap->alloc_size, sizeof(*hmap->buckets));
+	hmap->buckets = calloc(hmap->alloc_size, sizeof(*hmap->buckets));
 
 	for (size_t i = 0; i < old_size; ++i) {
 		if (old_buckets[i].filled) {
@@ -203,7 +203,7 @@ static inline void rehash(hashmap_t *hmap, size_t new_size) {
 		}
 	}
 
-	gfree(old_buckets);
+	free(old_buckets);
 }
 
 void *hashmap_get(hashmap_t *hmap, const void *key) {
@@ -229,11 +229,11 @@ void *hashmap_set(hashmap_t *hmap, const void *key, const void *value) {
 
 	if (old_bucket != NULL) {
 		if (hmap->copy_keys)
-			gfree(old_bucket->key);
+			free(old_bucket->key);
 
 		out_value = old_bucket->value;
 
-		gfree(old_bucket);
+		free(old_bucket);
 	}
 
 	return out_value;
@@ -254,7 +254,7 @@ void *hashmap_remove(hashmap_t *hmap, const void *key) {
 		value = hmap->buckets[index].value;
 
 		if (hmap->copy_keys)
-			gfree(hmap->buckets[index].key);
+			free(hmap->buckets[index].key);
 
 		while (1) {
 			// increment with wrap
@@ -297,7 +297,7 @@ void *hashmap_remove(hashmap_t *hmap, const void *key) {
 }
 
 hmapiter_t *hmapiter_create(hashmap_t *hmap) {
-	hmapiter_t *iter = gmalloc(sizeof(*iter));
+	hmapiter_t *iter = malloc(sizeof(*iter));
 
 	iter->hmap = hmap;
 	iter->idx = -1;

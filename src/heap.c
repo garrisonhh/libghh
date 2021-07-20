@@ -12,11 +12,11 @@ struct ghh_heap {
 };
 
 heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *)) {
-	heap_t *heap = gmalloc(sizeof(heap_t));
+	heap_t *heap = malloc(sizeof(heap_t));
 
 	heap->max_size = (1 << initial_depth) - 1;
 	heap->size = 0;
-	heap->items = gmalloc(heap->max_size * sizeof(void *));
+	heap->items = malloc(heap->max_size * sizeof(void *));
 	heap->compare = compare;
 
 	for (size_t i = 0; i < heap->max_size; i++)
@@ -28,10 +28,10 @@ heap_t *heap_create(int initial_depth, int (*compare)(const void *, const void *
 void heap_destroy(heap_t *heap, bool destroy_values) {
 	if (destroy_values)
 		for (size_t i = 0; i < heap->max_size; i++)
-			gfree(heap->items[i]);
+			free(heap->items[i]);
 
-	gfree(heap->items);
-	gfree(heap);
+	free(heap->items);
+	free(heap);
 }
 
 size_t heap_size(heap_t *heap) {
@@ -91,7 +91,7 @@ void heap_insert(heap_t *heap, void *item) {
 
 	if (++heap->size == heap->max_size) {
 		heap->max_size = (heap->max_size << 1) | 1;
-		heap->items = grealloc(heap->items, sizeof(void *) * heap->max_size);
+		heap->items = realloc(heap->items, sizeof(void *) * heap->max_size);
 	}
 }
 

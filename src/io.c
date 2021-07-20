@@ -20,7 +20,7 @@ char *load_text_file(const char *filename) {
 
 	// copy file data
 	rewind(file);
-	text = gmalloc((text_size + 1) * sizeof(*text));
+	text = malloc((text_size + 1) * sizeof(*text));
 
 	for (i = 0; i < text_size; ++i)
 		text[i] = fgetc(file);
