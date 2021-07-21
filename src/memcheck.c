@@ -137,7 +137,7 @@ void ghh_free(void *ptr, const char *file, const int line) {
 
         gen_key(unmatched, file, line);
 
-        printf("unmatched free\t%18p => %s\n", ptr, unmatched);
+        // printf("unmatched free\t%18p => %s\n", ptr, unmatched);
     }
 
     free(ptr);
