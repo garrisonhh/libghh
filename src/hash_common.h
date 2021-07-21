@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#define GHH_MEMCHECK_OVERRIDES
+#include <ghh/memcheck.h>
+#undef GHH_MEMCHECK_OVERRIDES
 
 // 64 bit
 #if INTPTR_MAX == INT64_MAX
@@ -41,7 +44,6 @@ static inline hash_t hash_key(int key_size, const void *key) {
 	return hash;
 }
 
-
 static inline const void *copy_key(int key_size, const void *key) {
 	void *copied;
 
@@ -54,16 +56,15 @@ static inline const void *copy_key(int key_size, const void *key) {
 
 		num_bytes *= sizeof(*str);
 
-		copied = malloc(num_bytes);
+		copied = ghh_override_malloc(num_bytes);
 		memcpy(copied, key, num_bytes);
 	} else {
-		copied = malloc(key_size);
+		copied = ghh_override_malloc(key_size);
 		memcpy(copied, key, key_size);
 	}
 
 	return copied;
 }
-
 
 static inline bool key_equals(int key_size, const void *key, const void *other) {
 	size_t i = 0;

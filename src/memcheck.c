@@ -1,69 +1,131 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ghh/hashmap.h>
-#include <ghh/string.h>
-#include <ghh/array.h>
+#include <ghh/utils.h>
 
-// *** DO NOT INCLUDE <ghh/memcheck.h> ***
+#ifdef GHH_MEMCHECK_H
+#error "DO NOT INCLUDE <ghh/memcheck.h> IN memcheck.c"
+#endif
 
-hashmap_t *mem_active = NULL;
-hashmap_t *mem_inactive = NULL;
+hashmap_t *entries = NULL; // char * => entry_t *
+hashmap_t *pointers = NULL; // void * => char * (key for entries)
+
+typedef struct entry {
+    // bytes per allocation, current allocations, total number of allocations
+    size_t bytes, current, total;
+} entry_t;
 
 void memcheck_init() {
-    mem_active = hashmap_create(0, -1, true);
-    mem_inactive = hashmap_create(0, -1, true);
+    entries = hashmap_create(256, -1, true);
+    pointers = hashmap_create(256, sizeof(void *), true);
 }
 
 void memcheck_quit() {
-    char *entry;
-    size_t *size;
+    char *key;
+    entry_t *entry;
+    hmapiter_t *iter;
+    size_t width, max_key_width = 0;
+    size_t unfreed = 0;
 
-    HMAP_FOREACH_KV(entry, size, mem_active)
-        printf("GHH_MEMCHECK: %lu bytes unfreed at %s.\n", *size, entry);
+    iter = hmapiter_create(entries);
 
-    HMAP_FOREACH_KV(entry, size, mem_inactive) {
-        if (size == NULL)
-            printf("GHH_MEMCHECK: unmatched free at %s.\n", entry);
-        else
-            printf("freed %lu at %s.\n", *size, entry);
+    // find total unfreed bytes and max file path width
+    while (hmapiter_next(iter, (void **)&key, (void **)&entry)) {
+        if (entry->current) {
+            if ((width = strlen(key)) > max_key_width)
+                max_key_width = width;
+
+            unfreed += entry->current * entry->bytes;
+        }
     }
 
-    hashmap_destroy(mem_active, true);
-    hashmap_destroy(mem_inactive, true);
+    max_key_width = MAX(max_key_width, 40); // for formatting
+
+    // generate status report
+    char desc[100], separator[100];
+    size_t i;
+
+    sprintf(desc, "%-*s unfreed bytes", max_key_width, "location");
+
+    for (i = 0; desc[i]; ++i)
+        separator[i] = '-';
+
+    separator[i] = 0;
+
+    puts("ghh memcheck status");
+    puts(separator);
+
+    if (unfreed) {
+        puts(desc);
+        puts(separator);
+
+        while (hmapiter_next(iter, (void **)&key, (void **)&entry)) {
+            if (entry->current) {
+                printf(
+                    "%-*s %ldx%ld\n",
+                    max_key_width, key, entry->current, entry->bytes
+                );
+            }
+        }
+
+        puts(separator);
+        printf("found %ld unfreed bytes in total.\n", unfreed);
+        puts(separator);
+    } else {
+        printf("all matched memory allocations freed.\n");
+    }
+
+    free(iter);
+    hashmap_destroy(entries, true);
+    hashmap_destroy(pointers, true);
 }
 
-static inline void gen_entry(char *str, const char *file, const int line) {
+static inline void gen_key(char *str, const char *file, const int line) {
     sprintf(str, "%s:%d", file, line);
 }
 
 void *ghh_alloc(size_t size, const char *file, const int line) {
-    char entry[250];
-    size_t *prev_size;
+    void *ptr = calloc(1, size);
+    entry_t *entry;
+    char key[100];
 
-    gen_entry(entry, file, line);
+    gen_key(key, file, line);
 
-    if ((prev_size = hashmap_get(mem_active, entry)) != NULL) {
-        *prev_size += size;
+    // update proper entry
+    if (hashmap_may_get(entries, key, (void **)&entry)) {
+        ++entry->total;
+        ++entry->current;
     } else {
-        prev_size = malloc(sizeof(*prev_size));
-        *prev_size = size;
+        entry = malloc(sizeof(*entry));
+
+        entry->bytes = size;
+        entry->current = entry->total = 1;
+
+        hashmap_set(entries, key, entry);
     }
 
-    hashmap_set(mem_active, entry, prev_size);
+    // map pointer to entry key
+    char *copied = malloc(sizeof(*key) * (strlen(key) + 1));
 
-    return malloc(size);
+    strcpy(copied, key);
+
+    hashmap_set(pointers, &ptr, copied);
+
+    return ptr;
 }
 
 void ghh_free(void *ptr, const char *file, const int line) {
-    size_t *prev_size;
-    char entry[250];
+    char *key;
 
-    gen_entry(entry, file, line);
+    if (hashmap_may_get(pointers, &ptr, (void **)&key)) { // if fails, ptr is unmatched
+        entry_t *entry;
 
-    if ((prev_size = hashmap_remove(mem_active, entry)) != NULL)
-        hashmap_set(mem_inactive, entry, prev_size);
-    else
-        hashmap_set(mem_inactive, entry, NULL);
+        if (hashmap_may_get(entries, key, (void **)&entry))
+            --entry->current;
+        else
+            ERROR("could not find key \"%s\" in entries.\n", key);
+    }
 
     free(ptr);
 }
@@ -72,7 +134,7 @@ void *ghh_realloc(void *old_ptr, size_t size, const char *file, const int line) 
     if (old_ptr == NULL)
         return ghh_alloc(size, file, line);
     else if (size == 0)
-        return (ghh_free(old_ptr, "ghh_realloc", 0), NULL);
+        return (ghh_free(old_ptr, file, line), NULL);
 
     return realloc(old_ptr, size);
 }

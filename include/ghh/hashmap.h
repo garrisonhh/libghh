@@ -19,7 +19,7 @@ size_t hashmap_size(hashmap_t *);
 // hashmap ops
 void *hashmap_get(hashmap_t *, const void *key);
 // returns true if bucket exists, whether or not value is NULL.
-// better replacement for `if ((value = hashmap_get()) != NULL) {}` idiom.
+// more robust than `if ((value = hashmap_get()) != NULL) {}` idiom.
 bool hashmap_may_get(hashmap_t *, const void *key, void **out_value);
 void *hashmap_set(hashmap_t *, const void *key, const void *value);
 void *hashmap_remove(hashmap_t *, const void *key);

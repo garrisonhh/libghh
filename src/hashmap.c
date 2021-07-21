@@ -1,8 +1,11 @@
 #define GHH_LIB_INTERNAL
 #include <stdlib.h>
-#include <string.h> // only for memcpy, don't use libc str functions when avoidable
+#include <string.h>
 #include <ghh/hashmap.h>
 #include <ghh/utils.h>
+#define GHH_MEMCHECK_OVERRIDES
+#include <ghh/memcheck.h>
+#undef GHH_MEMCHECK_OVERRIDES
 
 #include "hash_common.h"
 
@@ -29,7 +32,7 @@ struct ghh_hmapiter {
 };
 
 hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys) {
-	hashmap_t *hmap = malloc(sizeof(*hmap));
+	hashmap_t *hmap = ghh_override_malloc(sizeof(*hmap));
 
 	hmap->key_size = key_size;
 	hmap->copy_keys = copy_keys;
@@ -37,7 +40,7 @@ hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys) {
 	hmap->size = 0;
 	hmap->min_size = MAX(initial_size, MIN_HASHMAP_SIZE);
 	hmap->alloc_size = hmap->min_size;
-	hmap->buckets = calloc(hmap->alloc_size, sizeof(*hmap->buckets));
+	hmap->buckets = ghh_override_calloc(hmap->alloc_size, sizeof(*hmap->buckets));
 
 	return hmap;
 }
@@ -51,10 +54,10 @@ void hashmap_destroy(hashmap_t *hmap, bool destroy_values) {
 	if (hmap->copy_keys)
 		for (size_t i = 0; i < hmap->alloc_size; ++i)
 			if (hmap->buckets[i].key != NULL)
-				free(hmap->buckets[i].key);
+				ghh_override_free(hmap->buckets[i].key);
 
-	free(hmap->buckets);
-	free(hmap);
+	ghh_override_free(hmap->buckets);
+	ghh_override_free(hmap);
 }
 
 size_t hashmap_size(hashmap_t *hmap) {
@@ -86,7 +89,7 @@ static inline void *hashmap_set_lower(hashmap_t *hmap, void *key, void *value, h
 
 	if (hmap->buckets[index].filled) {
 		if (hmap->copy_keys)
-			free(hmap->buckets[index].key);
+			ghh_override_free(hmap->buckets[index].key);
 
 		old_value = hmap->buckets[index].value;
 	} else {
@@ -117,7 +120,7 @@ static inline void rehash(hashmap_t *hmap, size_t new_size) {
 
 	hmap->size = 0;
 	hmap->alloc_size = new_size;
-	hmap->buckets = calloc(hmap->alloc_size, sizeof(*hmap->buckets));
+	hmap->buckets = ghh_override_calloc(hmap->alloc_size, sizeof(*hmap->buckets));
 
 	for (size_t i = 0; i < old_size; ++i) {
 		if (old_buckets[i].filled) {
@@ -130,7 +133,7 @@ static inline void rehash(hashmap_t *hmap, size_t new_size) {
 		}
 	}
 
-	free(old_buckets);
+	ghh_override_free(old_buckets);
 }
 
 void *hashmap_get(hashmap_t *hmap, const void *key) {
@@ -180,7 +183,7 @@ void *hashmap_remove(hashmap_t *hmap, const void *key) {
 		value = hmap->buckets[index].value;
 
 		if (hmap->copy_keys)
-			free(hmap->buckets[index].key);
+			ghh_override_free(hmap->buckets[index].key);
 
 		while (1) {
 			// increment with wrap
@@ -223,7 +226,7 @@ void *hashmap_remove(hashmap_t *hmap, const void *key) {
 }
 
 hmapiter_t *hmapiter_create(hashmap_t *hmap) {
-	hmapiter_t *iter = malloc(sizeof(*iter));
+	hmapiter_t *iter = ghh_override_malloc(sizeof(*iter));
 
 	iter->hmap = hmap;
 	iter->idx = -1;
