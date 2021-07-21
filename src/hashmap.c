@@ -150,16 +150,18 @@ static inline int get_bucket_index(hashmap_t *hmap, const void *key, hash_t hash
 	return index;
 }
 
-// returns old bucket, null if none found
-static inline hashbucket_t *hashmap_set_lower(hashmap_t *hmap, void *key, void *value, hash_t hash) {
+// returns old value, null if none found
+static inline void *hashmap_set_lower(hashmap_t *hmap, void *key, void *value, hash_t hash) {
 	int index;
-	hashbucket_t *bucket = NULL;
+	void *old_value = NULL;
 
 	index = get_bucket_index(hmap, key, hash);
 
 	if (hmap->buckets[index].filled) {
-		bucket = malloc(sizeof(*bucket));
-		*bucket = hmap->buckets[index];
+		if (hmap->copy_keys)
+			free(hmap->buckets[index].key);
+
+		old_value = hmap->buckets[index].value;
 	} else {
 		hmap->buckets[index].filled = true;
 		hmap->buckets[index].hash = hash;
@@ -170,11 +172,10 @@ static inline hashbucket_t *hashmap_set_lower(hashmap_t *hmap, void *key, void *
 	hmap->buckets[index].key = key;
 	hmap->buckets[index].value = value;
 
-	// this is only needed every time for rehash.
-	// TODO should I use different set functions for rehash and set?
-	hmap->buckets[index].desired_idx = hash % hmap->alloc_size;
+	// this should only be needed for rehash, TODO some fix?
+	hmap->buckets[index].desired_idx = hmap->buckets[index].hash % hmap->alloc_size;
 
-	return bucket;
+	return old_value;
 }
 
 static inline void rehash(hashmap_t *hmap, size_t new_size) {
@@ -211,32 +212,31 @@ void *hashmap_get(hashmap_t *hmap, const void *key) {
 	return hmap->buckets[index].filled ? hmap->buckets[index].value : NULL;
 }
 
+bool hashmap_may_get(hashmap_t *hmap, const void *key, void **out_value) {
+	int index = get_bucket_index(hmap, key, hash_key(hmap, key));
+
+	if (hmap->buckets[index].filled) {
+		if (out_value != NULL)
+			*out_value = hmap->buckets[index].value;
+
+		return true;
+	}
+
+	return false;
+}
+
 bool hashmap_has(hashmap_t *hmap, const void *key) {
 	return hmap->buckets[get_bucket_index(hmap, key, hash_key(hmap, key))].filled;
 }
 
 void *hashmap_set(hashmap_t *hmap, const void *key, const void *value) {
-	hashbucket_t *old_bucket;
-	void *out_value = NULL;
-
 	if (hmap->size >= (hmap->alloc_size >> 1))
 		rehash(hmap, hmap->alloc_size << 1);
 
 	if (hmap->copy_keys)
 		key = copy_key(hmap, key);
 
-	old_bucket = hashmap_set_lower(hmap, (void *)key, (void *)value, hash_key(hmap, key));
-
-	if (old_bucket != NULL) {
-		if (hmap->copy_keys)
-			free(old_bucket->key);
-
-		out_value = old_bucket->value;
-
-		free(old_bucket);
-	}
-
-	return out_value;
+	return hashmap_set_lower(hmap, (void *)key, (void *)value, hash_key(hmap, key));
 }
 
 void *hashmap_remove(hashmap_t *hmap, const void *key) {
