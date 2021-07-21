@@ -51,29 +51,39 @@ VECTOR_FREE(v); // cleanup
 #endif
 
 // interface
+#define GHH_MIN_VECTOR_SIZE 8
+
 #define VECTOR_DATA(v) ((ghh_vector_data_t *)v - 1)
 #define VECTOR_SIZE(v) VECTOR_DATA(v)->size
 #define VECTOR_ALLOC_SIZE(v) VECTOR_DATA(v)->alloc_size
 
-#define VECTOR_ALLOC(vec, initial_size) (\
-    vec = ghh_vector_create(initial_size, sizeof(*vec))\
-)
+#define VECTOR_ALLOC(vec, initial_size) do {\
+    ghh_vector_data_t *vec_al;\
+    const size_t item_size_al = sizeof(*vec);\
+    size_t min_size_al = MAX(GHH_MIN_VECTOR_SIZE, initial_size);\
+    \
+    vec_al = malloc(sizeof(*vec_al) + (min_size_al * item_size_al));\
+    vec = (void *)(vec_al + 1);\
+    \
+    VECTOR_SIZE(vec) = 0;\
+    VECTOR_DATA(vec)->min_size = VECTOR_ALLOC_SIZE(vec) = min_size_al;\
+    VECTOR_DATA(vec)->item_size = item_size_al;\
+} while (0)
 
 #define VECTOR_FREE(vec) free(VECTOR_DATA(vec))
 
 #define VECTOR_CLEAR(vec) do {\
-    size_t min_size = VECTOR_DATA(vec)->min_size;\
-    VECTOR_FREE(vec);\
-    VECTOR_ALLOC(vec, min_size);\
+    VECTOR_SIZE(vec) = 0;\
+    vec = ghh_vector_check_shrink(vec);\
 } while (0)
 
-#define VECTOR_PUSH(vec, item) (\
-    vec = ghh_vector_check_expand(vec),\
-    vec[VECTOR_SIZE(vec)++] = (item)\
-)
+#define VECTOR_PUSH(vec, item) do {\
+    vec = ghh_vector_check_expand(vec);\
+    vec[VECTOR_SIZE(vec)++] = (item);\
+} while (0)
 
-// this is the only consistent way I've found to prevent POP() from triggering
-// warnings when the value of POP is unused
+// this is the only consistent way I've found to prevent POP
+// generating unnecessary warnings
 #pragma GCC system_header
 #define VECTOR_POP(vec) (\
     --VECTOR_SIZE(vec),\
@@ -82,36 +92,22 @@ VECTOR_FREE(v); // cleanup
 )
 
 // internal, don't touch this stuff
-#define GHH_MIN_VECTOR_SIZE 8
-
 typedef struct ghh_vector_data {
     size_t size, min_size, alloc_size;
     size_t item_size;
 } ghh_vector_data_t;
 
-static inline void *ghh_vector_create(size_t initial_size, size_t item_size) {
-    ghh_vector_data_t *vec;
+static inline void *ghh_vector_apply_size(void *vec) {
+    size_t new_size = VECTOR_ALLOC_SIZE(vec) * VECTOR_DATA(vec)->item_size;
+    new_size += sizeof(ghh_vector_data_t);
 
-    initial_size = MAX(GHH_MIN_VECTOR_SIZE, initial_size);
-
-    vec = malloc(sizeof(ghh_vector_data_t) + (initial_size * item_size));
-    ++vec;
-
-    VECTOR_SIZE(vec) = 0;
-    VECTOR_DATA(vec)->min_size = VECTOR_ALLOC_SIZE(vec) = initial_size;
-    VECTOR_DATA(vec)->item_size = item_size;
-
-    return vec;
+    return ((ghh_vector_data_t *)realloc(VECTOR_DATA(vec), new_size)) + 1;
 }
 
 static inline void *ghh_vector_check_expand(void *vec) {
     if (VECTOR_SIZE(vec) == VECTOR_ALLOC_SIZE(vec)) {
         VECTOR_ALLOC_SIZE(vec) <<= 1;
-
-        size_t new_size = VECTOR_ALLOC_SIZE(vec) * VECTOR_DATA(vec)->item_size;
-        new_size += sizeof(ghh_vector_data_t);
-
-        vec = (ghh_vector_data_t *)realloc(VECTOR_DATA(vec), new_size) + 1;
+        vec = ghh_vector_apply_size(vec);
     }
 
     return vec;
@@ -122,10 +118,7 @@ static inline void *ghh_vector_check_shrink(void *vec) {
      && VECTOR_ALLOC_SIZE(vec) > VECTOR_DATA(vec)->min_size) {
         VECTOR_ALLOC_SIZE(vec) >>= 1;
 
-        size_t new_size = VECTOR_ALLOC_SIZE(vec) * VECTOR_DATA(vec)->item_size;
-        new_size += sizeof(ghh_vector_data_t);
-
-        vec = (ghh_vector_data_t *)realloc(VECTOR_DATA(vec), new_size) + 1;
+        vec = ghh_vector_apply_size(vec);
     }
 
     return vec;

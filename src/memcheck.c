@@ -10,6 +10,7 @@
 
 hashmap_t *entries = NULL; // char * => entry_t *
 hashmap_t *pointers = NULL; // void * => char * (key for entries)
+bool post_quit;
 
 typedef struct entry {
     // bytes per allocation, current allocations, total number of allocations
@@ -53,6 +54,7 @@ void memcheck_quit() {
 
     separator[i] = 0;
 
+    puts(separator);
     puts("ghh memcheck status");
     puts(separator);
 
@@ -76,9 +78,18 @@ void memcheck_quit() {
         printf("all matched memory allocations freed.\n");
     }
 
+    // have to manually free entries and pointer values to prevent segfault on unmatched
+    // ghh_free()
+    while (hmapiter_next(iter, NULL, (void **)&entry))
+        free(entry);
+
     free(iter);
-    hashmap_destroy(entries, true);
-    hashmap_destroy(pointers, true);
+
+    HMAP_FOREACH_V(key, pointers)
+        free(key);
+
+    hashmap_destroy(entries, false);
+    hashmap_destroy(pointers, false);
 }
 
 static inline void gen_key(char *str, const char *file, const int line) {
@@ -118,23 +129,33 @@ void *ghh_alloc(size_t size, const char *file, const int line) {
 void ghh_free(void *ptr, const char *file, const int line) {
     char *key;
 
-    if (hashmap_may_get(pointers, &ptr, (void **)&key)) { // if fails, ptr is unmatched
-        entry_t *entry;
+    if (hashmap_may_get(pointers, &ptr, (void **)&key)) {
+        // if segfault from null here, something is broken in pointer mapping
+        --((entry_t *)hashmap_get(entries, key))->current;
+    } else {
+        char unmatched[100];
 
-        if (hashmap_may_get(entries, key, (void **)&entry))
-            --entry->current;
-        else
-            ERROR("could not find key \"%s\" in entries.\n", key);
+        gen_key(unmatched, file, line);
+
+        printf("unmatched free\t%18p => %s\n", ptr, unmatched);
     }
 
     free(ptr);
 }
 
 void *ghh_realloc(void *old_ptr, size_t size, const char *file, const int line) {
+    // edge cases where realloc acts as malloc or free
     if (old_ptr == NULL)
         return ghh_alloc(size, file, line);
     else if (size == 0)
         return (ghh_free(old_ptr, file, line), NULL);
 
-    return realloc(old_ptr, size);
+    // realloc acting as realloc
+    void *ptr;
+
+    ptr = ghh_alloc(size, file, line);
+    memcpy(ptr, old_ptr, size);
+    ghh_free(old_ptr, file, line);
+
+    return ptr;
 }
