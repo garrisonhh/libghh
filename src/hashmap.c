@@ -1,25 +1,10 @@
 #define GHH_LIB_INTERNAL
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h> // only for memcpy, don't use libc str functions when avoidable
 #include <ghh/hashmap.h>
 #include <ghh/utils.h>
 
-#if INTPTR_MAX == INT64_MAX
-
-// 64 bit
-typedef uint64_t hash_t;
-#define FNV_PRIME 0x00000100000001b3
-#define FNV_BASIS 0xcbf29ce484222325
-
-#else
-
-// 32 bit
-typedef uint32_t hash_t;
-#define FNV_PRIME 0x01000193a
-#define FNV_BASIS 0x811c9dc5
-
-#endif
+#include "hash_common.h"
 
 #define MIN_HASHMAP_SIZE 8
 
@@ -76,73 +61,15 @@ size_t hashmap_size(hashmap_t *hmap) {
 	return hmap->size;
 }
 
-// fnv-1a hash function (http://isthe.com/chongo/tech/comp/fnv/)
-static inline hash_t hash_key(hashmap_t *hmap, const void *key) {
-	hash_t hash = FNV_BASIS;
-	const uint8_t *bytes = key;
-
-	if (hmap->key_size < 0) {
-		while (*bytes) {
-			hash ^= *bytes++;
-			hash *= FNV_PRIME;
-		}
-	} else {
-		for (int i = 0; i < hmap->key_size; ++i) {
-			hash ^= bytes[i];
-			hash *= FNV_PRIME;
-		}
-	}
-
-	return hash;
-}
-
-static inline const void *copy_key(hashmap_t *hmap, const void *key) {
-	void *copied;
-
-	if (hmap->key_size < 0) {
-		size_t num_bytes = 1;
-		char *str = (char *)key;
-
-		while (*str++)
-			++num_bytes;
-
-		num_bytes *= sizeof(*str);
-
-		copied = malloc(num_bytes);
-		memcpy(copied, key, num_bytes);
-	} else {
-		copied = malloc(hmap->key_size);
-		memcpy(copied, key, hmap->key_size);
-	}
-
-	return copied;
-}
-
-static inline bool key_equals(hashmap_t *hmap, const void *key, const void *other) {
-	size_t i = 0;
-	const uint8_t *kbytes = key, *obytes = other;
-
-	if (hmap->key_size < 0) {
-		do {
-			if (kbytes[i] != obytes[i])
-				return false;
-		} while (kbytes[i++]);
-	} else {
-		for (; i < hmap->key_size; ++i)
-			if (kbytes[i] != obytes[i])
-				return false;
-	}
-
-	return true;
-}
-
 // returns -1 if no bucket found
 static inline int get_bucket_index(hashmap_t *hmap, const void *key, hash_t hash) {
 	int index = hash % hmap->alloc_size;
 
 	while (hmap->buckets[index].filled) {
-		if (hmap->buckets[index].hash == hash && key_equals(hmap, key, hmap->buckets[index].key))
+		if (hmap->buckets[index].hash == hash
+		 && key_equals(hmap->key_size, key, hmap->buckets[index].key)) {
 			break;
+		}
 
 		index = (index + 1) % hmap->alloc_size;
 	}
@@ -207,13 +134,13 @@ static inline void rehash(hashmap_t *hmap, size_t new_size) {
 }
 
 void *hashmap_get(hashmap_t *hmap, const void *key) {
-	int index = get_bucket_index(hmap, key, hash_key(hmap, key));
+	int index = get_bucket_index(hmap, key, hash_key(hmap->key_size, key));
 
 	return hmap->buckets[index].filled ? hmap->buckets[index].value : NULL;
 }
 
 bool hashmap_may_get(hashmap_t *hmap, const void *key, void **out_value) {
-	int index = get_bucket_index(hmap, key, hash_key(hmap, key));
+	int index = get_bucket_index(hmap, key, hash_key(hmap->key_size, key));
 
 	if (hmap->buckets[index].filled) {
 		if (out_value != NULL)
@@ -226,7 +153,7 @@ bool hashmap_may_get(hashmap_t *hmap, const void *key, void **out_value) {
 }
 
 bool hashmap_has(hashmap_t *hmap, const void *key) {
-	return hmap->buckets[get_bucket_index(hmap, key, hash_key(hmap, key))].filled;
+	return hmap->buckets[get_bucket_index(hmap, key, hash_key(hmap->key_size, key))].filled;
 }
 
 void *hashmap_set(hashmap_t *hmap, const void *key, const void *value) {
@@ -234,17 +161,16 @@ void *hashmap_set(hashmap_t *hmap, const void *key, const void *value) {
 		rehash(hmap, hmap->alloc_size << 1);
 
 	if (hmap->copy_keys)
-		key = copy_key(hmap, key);
+		key = copy_key(hmap->key_size, key);
 
-	return hashmap_set_lower(hmap, (void *)key, (void *)value, hash_key(hmap, key));
+	return hashmap_set_lower(hmap, (void *)key, (void *)value, hash_key(hmap->key_size, key));
 }
 
 void *hashmap_remove(hashmap_t *hmap, const void *key) {
-	hash_t hash;
 	int index;
 	void *value = NULL;
 
-	index = get_bucket_index(hmap, key, (hash = hash_key(hmap, key)));
+	index = get_bucket_index(hmap, key, hash_key(hmap->key_size, key));
 
 	if (hmap->buckets[index].filled) {
 		// filter up slots connected to this one
