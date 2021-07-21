@@ -4,7 +4,6 @@
 #include <string.h> // only for memcpy, don't use libc str functions when avoidable
 #include <ghh/hashmap.h>
 #include <ghh/utils.h>
-#include <ghh/memcheck.h>
 
 #if INTPTR_MAX == INT64_MAX
 
@@ -207,12 +206,13 @@ static inline void rehash(hashmap_t *hmap, size_t new_size) {
 }
 
 void *hashmap_get(hashmap_t *hmap, const void *key) {
-	hash_t hash;
-	int index;
-
-	index = get_bucket_index(hmap, key, (hash = hash_key(hmap, key)));
+	int index = get_bucket_index(hmap, key, hash_key(hmap, key));
 
 	return hmap->buckets[index].filled ? hmap->buckets[index].value : NULL;
+}
+
+bool hashmap_has(hashmap_t *hmap, const void *key) {
+	return hmap->buckets[get_bucket_index(hmap, key, hash_key(hmap, key))].filled;
 }
 
 void *hashmap_set(hashmap_t *hmap, const void *key, const void *value) {

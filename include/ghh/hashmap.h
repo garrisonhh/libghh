@@ -18,6 +18,9 @@ size_t hashmap_size(hashmap_t *);
 
 // ops
 void *hashmap_get(hashmap_t *, const void *key);
+// returns true if bucket exists, whether or not value is NULL.
+// better replacement for `if ((value = hashmap_get()) != NULL) {}` idiom.
+bool hashmap_may_get(hashmap_t *, const void *key, void **out_value);
 void *hashmap_set(hashmap_t *, const void *key, const void *value);
 void *hashmap_remove(hashmap_t *, const void *key);
 
@@ -43,6 +46,7 @@ void hmapiter_reset(hmapiter_t *);
 // returns whether not done
 bool hmapiter_next(hmapiter_t *, void **out_key, void **out_value);
 
+// these are convenient, but they hide a lot of functionality, use with caution
 #define HMAP_FOREACH_KV(key, value, hmap) for (\
     hmapiter_t *HMAP_FE_ITER = hmapiter_create(hmap);\
     hmapiter_next(HMAP_FE_ITER, (void **)&key, (void **)&value)\
