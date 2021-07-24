@@ -13,7 +13,8 @@ void array_destroy(array_t *, bool destroy_values);
 // data access
 size_t array_size(array_t *);
 void *array_get(array_t *, size_t index);
-void *array_raw(array_t *); // don't use this unless you know what you're doing
+void *array_set(array_t *, size_t index, void *item); // returns old value
+void *array_raw(array_t *); // don't use this unless you know what you're doin
 
 // stack ops
 void array_push(array_t *, void *item);

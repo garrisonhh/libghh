@@ -48,7 +48,7 @@ double timeit_get_time() {
 
 	gettimeofday(&now, NULL);
 
-	return (double)now.tv_sec + ((double)now.tv_usec) / 1000000;
+	return (double)now.tv_sec + ((double)now.tv_usec) / 1000000.0;
 }
 
 void print_bits(const char *message, unsigned n, size_t bits) {

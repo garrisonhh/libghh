@@ -6,6 +6,7 @@
 
 #ifdef GHH_MEMCHECK_OVERRIDES
 
+// these are only needed in
 static inline void *ghh_override_malloc(size_t size) {
     return malloc(size);
 }

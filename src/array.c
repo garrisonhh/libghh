@@ -37,10 +37,17 @@ void *array_get(array_t *array, size_t index) {
 	return array->items[index];
 }
 
+void *array_set(array_t *array, size_t index, void *item) {
+	void *old = array->items[index];
+
+	array->items[index] = item;
+
+	return old;
+}
+
 void *array_raw(array_t *array) {
 	return array->items;
 }
-
 void array_push(array_t *array, void *item) {
 	if (array->size == array->alloc_size) {
 		array->alloc_size <<= 1;

@@ -170,9 +170,8 @@ void *ghh_realloc(void *old_ptr, size_t size, const char *file, const int line) 
     // realloc acting as realloc
     void *ptr;
 
-    ptr = ghh_alloc(size, file, line);
-    memcpy(ptr, old_ptr, size);
-    ghh_free(old_ptr, file, line);
+    // TODO log reallocated size somehow!
+    ptr = realloc(old_ptr, size);
 
     return ptr;
 }
