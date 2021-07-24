@@ -4,7 +4,7 @@
 #define GHH_LIB_INTERNAL
 #include <stdlib.h>
 #include <ghh/utils.h>
-#include <ghh/memcheck.h>
+//#include <ghh/memcheck.h>
 #undef GHH_LIB_INTERNAL
 
 /*

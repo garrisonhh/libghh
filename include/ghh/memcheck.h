@@ -33,7 +33,7 @@ static inline void ghh_override_free(void *ptr) {
 #else
 
 void memcheck_init(void);
-void memcheck_quit(bool all);
+void memcheck_quit(bool show_total);
 
 void *ghh_alloc(size_t size, const char *file, const int line);
 void *ghh_realloc(void *old_ptr, size_t size, const char *file, const int line);

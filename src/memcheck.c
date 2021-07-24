@@ -2,90 +2,152 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ghh/hashmap.h>
+#include <ghh/vector.h>
 #include <ghh/utils.h>
 
 #ifdef GHH_MEMCHECK_H
 #error "DO NOT INCLUDE <ghh/memcheck.h> IN memcheck.c"
 #endif
 
+typedef long long unsigned int nbytes_t;
+
+const nbytes_t KB_BITS = 1024;
+const nbytes_t MB_BITS = KB_BITS * KB_BITS;
+const nbytes_t GB_BITS = MB_BITS * KB_BITS;
+
 hashmap_t *entries = NULL; // char * => entry_t *
-hashmap_t *pointers = NULL; // void * => char * (key for entries)
-bool post_quit;
-long long unsigned int current_alloc = 0;
-long long unsigned int max_alloc = 0;
+hashmap_t *pointers = NULL; // void * => allocated_t *
+nbytes_t current_alloc = 0;
+nbytes_t max_alloc = 0;
+
+char SEPARATOR[81];
 
 typedef struct entry {
-    // bytes per allocation, current allocations, total number of allocations
-    size_t bytes, current, total;
+    size_t current, total;
 } entry_t;
+
+typedef struct allocated {
+    char *entry_key;
+    size_t bytes;
+} allocated_t;
+
+typedef struct loggable {
+    char **key;
+    nbytes_t *bytes;
+} loggable_t;
 
 void memcheck_init() {
     entries = hashmap_create(256, -1, true);
     pointers = hashmap_create(256, sizeof(void *), true);
+
+    memset(SEPARATOR, '-', ARRAY_LEN(SEPARATOR));
+    SEPARATOR[ARRAY_LEN(SEPARATOR) - 1] = 0;
 }
 
-void memcheck_quit(bool all) {
-    char *key;
-    char separator[101];
+void sprintf_bytes(char *str, int align, nbytes_t bytes) {
+    const char *name = " B";
+    nbytes_t denom = 0;
+    double disp_bytes;
+
+    if (bytes >= GB_BITS) {
+        denom = GB_BITS;
+        name = "GB";
+    } else if (bytes >= MB_BITS) {
+        denom = MB_BITS;
+        name = "MB";
+    } else if (bytes >= KB_BITS) {
+        denom = KB_BITS;
+        name = "KB";
+    }
+
+    if (denom)
+        sprintf(str, "%*.2f %s", align - 3, (double)bytes / (double)denom, name);
+    else
+        sprintf(str, "%*ld %s", align - 3, bytes, name);
+}
+
+int loggable_compare(const void *a, const void *b) {
+    return *((loggable_t *)b)->bytes - *((loggable_t *)a)->bytes;
+}
+
+void print_log(const char *title, char **keys, nbytes_t *bytes, size_t n_items) {
+    size_t i;
+    char byte_desc[32];
+    loggable_t loggables[n_items];
+
+    for (i = 0; i < n_items; ++i)
+        loggables[i] = (loggable_t){&keys[i], &bytes[i]};
+
+    qsort(loggables, n_items, sizeof(loggable_t), loggable_compare);
+
+    // print
+    puts(SEPARATOR);
+    printf("%-75s size\n", title);
+    puts(SEPARATOR);
+
+    for (i = 0; i < n_items; ++i) {
+        sprintf_bytes(byte_desc, 16, *loggables[i].bytes);
+        printf("%-63s %s\n", *loggables[i].key, byte_desc);
+    }
+}
+
+void memcheck_quit(bool show_total) {
+    allocated_t *allocated;
     entry_t *entry;
     hmapiter_t *iter;
-    size_t width, max_key_width = 70;
-    size_t unfreed = 0;
+    char *key;
+    char **keys;
+    nbytes_t *bytes;
+    char byte_desc[32];
+    size_t width;
 
     iter = hmapiter_create(entries);
 
-    // find total unfreed bytes and max file path width
-    while (hmapiter_next(iter, (void **)&key, (void **)&entry)) {
-        if ((width = strlen(key)) > max_key_width)
-            max_key_width = width;
-
-        unfreed += entry->current * entry->bytes;
-    }
-
-    max_key_width = MAX(max_key_width, 40); // for formatting
-
     // generate status report
-    memset(separator, '-', ARRAY_LEN(separator));
-    separator[ARRAY_LEN(separator) - 1] = 0;
+    VECTOR_ALLOC(keys, 0);
+    VECTOR_ALLOC(bytes, 0);
 
-    puts(separator);
-
-    // total allocations
-    if (all) {
-        printf("%-*s allocations x bytes\n", max_key_width, "PROPERLY FREED");
-        puts(separator);
-
+    // total allocation
+    if (show_total) {
+        // generate log
         while (hmapiter_next(iter, (void **)&key, (void **)&entry)) {
-            printf(
-                "%-*s %11ld x %ld\n",
-                max_key_width, key, entry->total, entry->bytes
-            );
+            VECTOR_PUSH(keys, key);
+            VECTOR_PUSH(bytes, entry->total);
         }
 
-        puts(separator);
+        // print log
+        print_log("total", keys, bytes, VECTOR_SIZE(bytes));
+
+        VECTOR_CLEAR(keys);
+        VECTOR_CLEAR(bytes);
     }
 
     // leaked memory
-    if (unfreed) {
-        printf("%-*s allocations x bytes\n", max_key_width, "MEMORY LEAKS");
-        puts(separator);
-
+    if (current_alloc) {
+        // generate log
         while (hmapiter_next(iter, (void **)&key, (void **)&entry)) {
             if (entry->current) {
-                printf(
-                    "%-*s %11ld x %ld\n",
-                    max_key_width, key, entry->total, entry->bytes
-                );
+                VECTOR_PUSH(keys, key);
+                VECTOR_PUSH(bytes, entry->current);
             }
         }
 
-        puts(separator);
-        printf("%ld unfreed bytes found in total.\n", unfreed);
+        // print log
+        print_log("leaked", keys, bytes, VECTOR_SIZE(bytes));
+
+        sprintf_bytes(byte_desc, 10, current_alloc);
+        puts(SEPARATOR);
+        printf("%s unfreed found in total.\n", byte_desc);
     } else {
+        puts(SEPARATOR);
         printf("all matched memory allocations were properly freed.\n");
     }
 
-    puts(separator);
+    puts(SEPARATOR);
+
+    // cleanup
+    VECTOR_FREE(keys);
+    VECTOR_FREE(bytes);
 
     // have to manually free entries and pointer values to prevent segfault on unmatched
     // ghh_free()
@@ -94,8 +156,10 @@ void memcheck_quit(bool all) {
 
     free(iter);
 
-    HMAP_FOREACH_V(key, pointers)
-        free(key);
+    HMAP_FOREACH_V(allocated, pointers) {
+        free(allocated->entry_key);
+        free(allocated);
+    }
 
     hashmap_destroy(entries, false);
     hashmap_destroy(pointers, false);
@@ -105,73 +169,84 @@ static inline void gen_key(char *str, const char *file, const int line) {
     sprintf(str, "%s:%d", file, line);
 }
 
-void *ghh_alloc(size_t size, const char *file, const int line) {
-    void *ptr = calloc(1, size);
+void log_alloc(void *ptr, size_t size, const char *file, const int line) {
     entry_t *entry;
+    allocated_t *allocated;
     char key[100];
 
     gen_key(key, file, line);
 
+    // map allocated pointer
+    allocated = malloc(sizeof(*allocated));
+
+    allocated->entry_key = malloc((strlen(key) + 1) * sizeof(*key));
+    allocated->bytes = size;
+
+    strcpy(allocated->entry_key, key);
+
+    hashmap_set(pointers, &ptr, allocated);
+
     // update proper entry
     if (hashmap_may_get(entries, key, (void **)&entry)) {
-        ++entry->total;
-        ++entry->current;
+        entry->total += size;
+        entry->current += size;
     } else {
         entry = malloc(sizeof(*entry));
 
-        entry->bytes = size;
-        entry->current = entry->total = 1;
+        entry->current = entry->total = size;
 
         hashmap_set(entries, key, entry);
     }
-
-    // map pointer to entry key
-    char *copied = malloc(sizeof(*key) * (strlen(key) + 1));
-
-    strcpy(copied, key);
-
-    hashmap_set(pointers, &ptr, copied);
 
     // update global tracking
     current_alloc += size;
 
     if (current_alloc > max_alloc)
         max_alloc = current_alloc;
+}
+
+void log_free(void *ptr, const char *file, const int line) {
+    allocated_t *allocated;
+
+    if (hashmap_may_get(pointers, &ptr, (void **)&allocated)) {
+        // if segfault from null here, something is broken in pointer mapping
+        entry_t *entry = hashmap_get(entries, allocated->entry_key);
+
+        entry->current -= allocated->bytes;
+        current_alloc -= allocated->bytes;
+    }/* else {
+        char unmatched[100];
+
+        gen_key(unmatched, file, line);
+
+        printf("unmatched free at %s\n", unmatched);
+    }*/
+}
+
+void *ghh_alloc(size_t size, const char *file, const int line) {
+    void *ptr = calloc(1, size);
+
+    log_alloc(ptr, size, file, line);
 
     return ptr;
 }
 
 void ghh_free(void *ptr, const char *file, const int line) {
-    char *key;
-
-    if (hashmap_may_get(pointers, &ptr, (void **)&key)) {
-        // if segfault from null here, something is broken in pointer mapping
-        entry_t *entry = hashmap_get(entries, key);
-
-        --entry->current;
-
-        current_alloc -= entry->bytes;
-    } else {
-        char unmatched[100];
-
-        gen_key(unmatched, file, line);
-    }
+    log_free(ptr, file, line);
 
     free(ptr);
 }
 
 void *ghh_realloc(void *old_ptr, size_t size, const char *file, const int line) {
-    // edge cases where realloc acts as malloc or free
-    if (old_ptr == NULL)
-        return ghh_alloc(size, file, line);
-    else if (size == 0)
-        return (ghh_free(old_ptr, file, line), NULL);
-
-    // realloc acting as realloc
     void *ptr;
 
-    // TODO log reallocated size somehow!
+    if (old_ptr != NULL)
+        log_free(old_ptr, file, line);
+
     ptr = realloc(old_ptr, size);
+
+    if (size)
+        log_alloc(ptr, size, file, line);
 
     return ptr;
 }
