@@ -10,6 +10,7 @@ typedef struct ghh_hmapiter hmapiter_t;
 // instancing
 // key_size < 0: hashes as a string
 // key_size > 0: hashes a type where key_size == sizeof(type)
+// beware, if structs with padding have not been calloc'd or memset, key comparison is UB
 hashmap_t *hashmap_create(size_t initial_size, int key_size, bool copy_keys);
 void hashmap_destroy(hashmap_t *, bool destroy_values);
 
