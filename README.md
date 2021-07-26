@@ -1,4 +1,4 @@
-# ghh-lib
+# libghh
 
 data structures and utilities I made and use for C99. header files are written in an opaque + self-explanatory style for reference :)
 
