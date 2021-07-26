@@ -44,7 +44,9 @@
 void print_bits(const char *message, unsigned n, size_t bits);
 
 // swap
-#define SWAP(a, b, temp) do {\
+// evil xor hack
+#define SWAP(a, b) (((a) ^ (b)) && ((b) ^= (a) ^= (b), (a) ^= (b)))
+#define SWAP_TMP(a, b, temp) do {\
 	temp = a;\
 	a = b;\
 	b = temp;\
