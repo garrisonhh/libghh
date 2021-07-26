@@ -19,7 +19,6 @@ utilities
 - runtime memory allocation checking
 - strings
 - timers
-- 
 
 ## build
 
