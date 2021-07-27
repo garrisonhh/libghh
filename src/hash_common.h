@@ -9,7 +9,6 @@
 #include <ghh/memcheck.h>
 #undef GHH_MEMCHECK_OVERRIDES
 
-// fnv-1a hash function (http://isthe.com/chongo/tech/comp/fnv/)
 static inline hash_t hash_key(int key_size, const void *key) {
 	return key_size < 0 ? hash(key, strlen(key)) : hash(key, key_size);
 }
