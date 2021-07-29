@@ -20,7 +20,7 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CLAMP(x, a, b) (MAX(MIN(x, b), a))
-#define LERP(x, a, b) (((x) - (a)) / ((b) - (a)))
+#define LERP(x, a, b) ((a) + (x) * ((b) - (a)))
 #define INRANGE(x, a, b) ((x) >= (a) && (x) < (b))
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(*arr))
 #define CONCAT(a, b) a##b
