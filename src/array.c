@@ -58,6 +58,9 @@ void array_push(array_t *array, void *item) {
 }
 
 void *array_pop(array_t *array) {
+	if (!array->size)
+		return NULL;
+
 	void *value = array->items[--array->size];
 
 	if (array->size < (array->alloc_size >> 1)) {
