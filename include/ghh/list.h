@@ -18,11 +18,13 @@ void *list_get_root(list_t *);
 void *list_get_tip(list_t *);
 
 // stack/queue ops
-void list_push(list_t *, void *item);
-void list_append(list_t *, void *item);
+void list_push(list_t *, void *item); // item + [:]
+void list_append(list_t *, void *item); // [:] + item
 void *list_pop(list_t *);
 void *list_peek(list_t *);
 
+// list ops
+void list_insert(list_t *, size_t index, void *item); // [:index] + item + [index:]
 // directly compares pointers
 void *list_remove(list_t *, void *item);
 void list_merge(list_t *, list_t *other);

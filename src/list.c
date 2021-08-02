@@ -4,10 +4,11 @@
 #include <stdbool.h>
 #include <ghh/list.h>
 #include <ghh/memcheck.h>
+#include <ghh/utils.h>
 
-typedef struct list_node {
+typedef struct ghh_listnode {
 	void *item;
-	struct list_node *next;
+	struct ghh_listnode *next;
 } listnode_t;
 
 struct ghh_list {
@@ -61,10 +62,10 @@ void *list_get_tip(list_t *list) {
 }
 
 void *list_get(list_t *list, size_t index) {
-	if (index >= list->size) {
-		printf("tried to access node at index outside of linked list.\n");
-		exit(1);
-	}
+#ifdef DEBUG
+	if (index >= list->size)
+		ERROR("tried to access node at index outside of linked list.\n");
+#endif
 
 	int i = 0;
 	listnode_t *trav = list->root;
@@ -75,8 +76,30 @@ void *list_get(list_t *list, size_t index) {
 	return trav;
 }
 
+void list_insert(list_t *list, size_t index, void *item) {
+	if (index >= list->size) {
+		list_append(list, item);
+	} else if (index == 0) {
+		list_push(list, item);
+	} else {
+		int i = 0;
+		listnode_t *trav = list->root;
+		listnode_t *node = malloc(sizeof(*node));
+
+		node->item = item;
+
+		while (++i < index)
+			trav = trav->next;
+
+		node->next = trav->next;
+		trav->next = node;
+
+		++list->size;
+	}
+}
+
 void list_push(list_t *list, void *item) {
-	listnode_t *node = malloc(sizeof(listnode_t));
+	listnode_t *node = malloc(sizeof(*node));
 
 	node->item = item;
 
@@ -93,7 +116,7 @@ void list_push(list_t *list, void *item) {
 }
 
 void list_append(list_t *list, void *item) {
-	listnode_t *node = malloc(sizeof(listnode_t));
+	listnode_t *node = malloc(sizeof(*node));
 
 	node->item = item;
 	node->next = NULL;
@@ -110,10 +133,10 @@ void list_append(list_t *list, void *item) {
 }
 
 void *list_pop(list_t *list) {
-	if (list->root == NULL) {
-		printf("attempted to pop from empty list.\n");
-		exit(1);
-	}
+#ifdef DEBUG
+	if (!list->root)
+		ERROR("attempted to pop from empty list.\n");
+#endif
 
 	listnode_t *old_root;
 	void *item;
