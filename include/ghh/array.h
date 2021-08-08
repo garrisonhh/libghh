@@ -26,4 +26,13 @@ void *array_del(array_t *, size_t index);
 void array_clear(array_t *, bool destroy_values);
 void array_qsort(array_t *, int (*compare)(const void *, const void *));
 
+#define ARRAY_FOREACH(item, array)\
+    for (\
+        size_t ARR_FE_ITER = 0;\
+        ARR_FE_ITER < array_size(array)\
+            ? (item = array_get(array, ARR_FE_ITER), true)\
+            : false;\
+        ++ARR_FE_ITER\
+    )
+
 #endif
