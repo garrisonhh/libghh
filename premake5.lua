@@ -1,8 +1,10 @@
 project "ghh"
-	kind "StaticLib"
+	kind "SharedLib"
 	language "C"
 	cdialect "c99"
-	buildoptions { "-pedantic" }
+
+	enablewarnings { "all" }
+	buildoptions { "-pedantic-errors" }
 
 	targetdir ("bin/%{prj.name}")
 	objdir ("obj/%{prj.name}")
