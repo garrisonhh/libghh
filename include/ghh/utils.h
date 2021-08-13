@@ -23,39 +23,31 @@
 #define CLAMP(x, a, b) (MAX(MIN(x, b), a))
 #define LERP(x, a, b) ((a) + (x) * ((b) - (a)))
 #define INRANGE(x, a, b) ((x) >= (a) && (x) < (b))
-#define ARRAY_LEN(arr) (sizeof(arr) / sizeof(*arr))
-#define CONCAT(a, b) a##b
-
-// loops
-#define FOR_XY(x, y, mx, my) for (y = 0; y < my; ++y) for (x = 0; x < mx; ++x)
-#define FOR_XYZ(x, y, z, mx, my, mz) for (z = 0; z < mz; ++z) for (y = 0; y < my; ++y) for (x = 0; x < mx; ++x)
-#define FOR_CUBE(x, y, z, minv, maxv) for (z = minv; z < maxv; ++z) for (y = minv; y < maxv; ++y) for (x = minv; x < maxv; ++x)
+#define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
 
 // bitfield ops
-// TODO use BIT_SET() and BIT_CLEAR() terminology?
 #define BIT_GET(bitfield, index) ((bitfield >> (index)) & 1)
-#define BIT_SET_TRUE(bitfield, index) do {bitfield |= (0x1 << (index));} while (0);
-#define BIT_SET_FALSE(bitfield, index) do {bitfield &= ~(0x1 << (index));} while (0);
+#define BIT_SET(bitfield, index) do {bitfield |= (0x1 << (index));} while (0)
+#define BIT_CLEAR(bitfield, index) do {bitfield &= ~(0x1 << (index));} while (0)
 
 #define BIT_SET_COND(bitfield, index, cond)\
 	do {\
-		if (cond) \
-			BIT_SET_TRUE(bitfield, index) \
-		else \
-			BIT_SET_FALSE(bitfield, index) \
+		if (cond) BIT_SET(bitfield, index);\
+		else BIT_CLEAR(bitfield, index);\
 	} while (0)
 
 void print_bits(const char *message, unsigned n, size_t bits);
 
 // swap
-// evil xor hack
-#define SWAP(a, b) (((a) ^ (b)) && ((b) ^= (a) ^= (b), (a) ^= (b)))
-#define SWAP_TMP(a, b, temp)\
+#define SWAP(a, b, temp)\
 	do {\
 		temp = a;\
 		a = b;\
 		b = temp;\
 	} while (0)
+
+// cursed macro.
+#define SWAP_XOR(a, b) (((a) ^ (b)) && ((b) ^= (a) ^= (b), (a) ^= (b)))
 
 // swp is bool/unsigned/int
 #define BIT_SET_SWAP(bitfield, index1, index2, swp)\
@@ -81,18 +73,9 @@ void print_bits(const char *message, unsigned n, size_t bits);
 
 // float stuff
 #define fround(d) (floor(d + 0.5 + EPSILON))
-
-static inline bool fequals(double a, double b) {
-	return fabs(a - b) < EPSILON;
-}
-
-static inline double randf() {
-	return (double)rand() / (double)RAND_MAX;
-}
-
-static inline double rand_angle() {
-	return randf() * M_PI * 2.0;
-}
+#define fequals(a, b) (fabs(a - b) < EPSILON)
+#define randf() ((double)rand() / (double)RAND_MAX)
+#define rand_angle() (randf() * M_PI * 2.0)
 
 // time
 void timeit_start(void);
