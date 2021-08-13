@@ -1,4 +1,3 @@
-#define GHH_LIB_INTERNAL
 #include <stdlib.h>
 #include <string.h>
 #include <ghh/hashmap.h>

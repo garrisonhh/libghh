@@ -9,16 +9,14 @@
 #error "DO NOT INCLUDE <ghh/memcheck.h> IN memcheck.c"
 #endif
 
-typedef long long unsigned int nbytes_t;
-
-const nbytes_t KB_BITS = 1024;
-const nbytes_t MB_BITS = KB_BITS * KB_BITS;
-const nbytes_t GB_BITS = MB_BITS * KB_BITS;
+const size_t KB_BITS = 1024;
+const size_t MB_BITS = KB_BITS * KB_BITS;
+const size_t GB_BITS = MB_BITS * KB_BITS;
 
 hashmap_t *entries = NULL; // char * => entry_t *
 hashmap_t *pointers = NULL; // void * => allocated_t *
-nbytes_t current_alloc = 0;
-nbytes_t max_alloc = 0;
+size_t current_alloc = 0;
+size_t max_alloc = 0;
 
 char SEPARATOR[81];
 
@@ -33,7 +31,7 @@ typedef struct allocated {
 
 typedef struct loggable {
     char **key;
-    nbytes_t *bytes;
+    size_t *bytes;
 } loggable_t;
 
 void memcheck_init() {
@@ -44,9 +42,9 @@ void memcheck_init() {
     SEPARATOR[ARRAY_LEN(SEPARATOR) - 1] = 0;
 }
 
-void sprintf_bytes(char *str, int align, nbytes_t bytes) {
+void sprintf_bytes(char *str, int align, size_t bytes) {
     const char *name = " B";
-    nbytes_t denom = 0;
+    size_t denom = 0;
     double disp_bytes;
 
     if (bytes >= GB_BITS) {
@@ -63,14 +61,14 @@ void sprintf_bytes(char *str, int align, nbytes_t bytes) {
     if (denom)
         sprintf(str, "%*.2f %s", align - 3, (double)bytes / (double)denom, name);
     else
-        sprintf(str, "%*ld %s", align - 3, bytes, name);
+        sprintf(str, "%*zu %s", align - 3, bytes, name);
 }
 
 int loggable_compare(const void *a, const void *b) {
     return *((loggable_t *)b)->bytes - *((loggable_t *)a)->bytes;
 }
 
-void print_log(const char *title, char **keys, nbytes_t *bytes, size_t n_items) {
+void print_log(const char *title, char **keys, size_t *bytes, size_t n_items) {
     size_t i;
     char byte_desc[32];
     loggable_t loggables[n_items];
@@ -97,7 +95,7 @@ void memcheck_quit(bool show_total) {
     hmapiter_t *iter;
     char *key;
     char **keys;
-    nbytes_t *bytes;
+    size_t *bytes;
     char byte_desc[32];
     size_t width;
 
@@ -214,13 +212,7 @@ void log_free(void *ptr, const char *file, const int line) {
 
         entry->current -= allocated->bytes;
         current_alloc -= allocated->bytes;
-    }/* else {
-        char unmatched[100];
-
-        gen_key(unmatched, file, line);
-
-        printf("unmatched free at %s\n", unmatched);
-    }*/
+    }
 }
 
 void *ghh_alloc(size_t size, const char *file, const int line) {

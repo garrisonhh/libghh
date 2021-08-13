@@ -1,9 +1,14 @@
-#ifndef GHH_TIMER_H
-#define GHH_TIMER_H
+#ifndef GHH_TIME_H
+#define GHH_TIME_H
 
 #include <stddef.h>
+#include <sys/time.h> // works through mingw on windows
 
 typedef struct ghh_timer gtimer_t;
+
+double time_get(void);
+void timeit_start(void);
+void timeit_end(const char *message);
 
 gtimer_t *gtimer_create(size_t len_tracked);
 void gtimer_destroy(gtimer_t *);

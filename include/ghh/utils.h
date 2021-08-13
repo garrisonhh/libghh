@@ -23,7 +23,7 @@
 #define CLAMP(x, a, b) (MAX(MIN(x, b), a))
 #define LERP(x, a, b) ((a) + (x) * ((b) - (a)))
 #define INRANGE(x, a, b) ((x) >= (a) && (x) < (b))
-#define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ARRSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 // bitfield ops
 #define BIT_GET(bitfield, index) ((bitfield >> (index)) & 1)
@@ -36,7 +36,15 @@
 		else BIT_CLEAR(bitfield, index);\
 	} while (0)
 
-void print_bits(const char *message, unsigned n, size_t bits);
+inline void print_bits(const char *message, unsigned n, size_t bits) {
+	if (message != NULL)
+		printf("%s:\t", message);
+
+	for (int i = bits - 1; i >= 0; --i)
+		printf("%u", BIT_GET(n, i));
+
+	putchar('\n');
+}
 
 // swap
 #define SWAP(a, b, temp)\
@@ -76,10 +84,5 @@ void print_bits(const char *message, unsigned n, size_t bits);
 #define fequals(a, b) (fabs(a - b) < EPSILON)
 #define randf() ((double)rand() / (double)RAND_MAX)
 #define rand_angle() (randf() * M_PI * 2.0)
-
-// time
-void timeit_start(void);
-void timeit_end(const char *message);
-double timeit_get_time(void);
 
 #endif
