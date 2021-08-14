@@ -1,6 +1,6 @@
 # libghh
 
-data structures and utilities I made and personally use in my C99 projects.
+ISO C99 data structures and utilities I made and personally use in my C99+ projects. there are no dependencies outside of libc.
 
 ## what's here?
 

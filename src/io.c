@@ -4,7 +4,8 @@
 #include <ghh/memcheck.h>
 
 // string must be freed
-char *load_text_file(const char *filename) {
+// TODO use string builder, and fread(), don't rewind
+char *io_read_text(const char *filename) {
 	FILE *file;
 	char *text;
 	size_t text_size, i;
