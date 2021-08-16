@@ -38,8 +38,8 @@ void memcheck_init() {
     entries = hashmap_create(256, -1, true);
     pointers = hashmap_create(256, sizeof(void *), true);
 
-    memset(SEPARATOR, '-', ARRAY_LEN(SEPARATOR));
-    SEPARATOR[ARRAY_LEN(SEPARATOR) - 1] = 0;
+    memset(SEPARATOR, '-', ARRAY_SIZE(SEPARATOR));
+    SEPARATOR[ARRAY_SIZE(SEPARATOR) - 1] = 0;
 }
 
 void sprintf_bytes(char *str, int align, size_t bytes) {

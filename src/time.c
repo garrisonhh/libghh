@@ -81,7 +81,7 @@ void gtimer_destroy(gtimer_t *timer) {
 
 void gtimer_tick(gtimer_t *timer) {
 	timer->last_tick = timer->this_tick;
-	timer->this_tick = timeit_get_time();
+	timer->this_tick = time_get();
 
 	timer->tick = timer->this_tick - timer->last_tick;
 

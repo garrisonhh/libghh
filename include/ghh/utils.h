@@ -22,8 +22,7 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CLAMP(x, a, b) (MAX(MIN(x, b), a))
 #define LERP(x, a, b) ((a) + (x) * ((b) - (a)))
-#define INRANGE(x, a, b) ((x) >= (a) && (x) < (b))
-#define ARRSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 // bitfield ops
 #define BIT_GET(bitfield, index) ((bitfield >> (index)) & 1)

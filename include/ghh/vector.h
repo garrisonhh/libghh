@@ -1,11 +1,9 @@
 #ifndef GHH_VECTOR_H
 #define GHH_VECTOR_H
 
-#define GHH_LIB_INTERNAL
 #include <stdlib.h>
 #include <ghh/utils.h>
 //#include <ghh/memcheck.h>
-#undef GHH_LIB_INTERNAL
 
 /*
 sometimes you want a dynamic array, but using array_t would require a lot of

@@ -1,13 +1,13 @@
 project "ghh"
 	kind "SharedLib"
 	language "C"
-	cdialect "c99"
+	cdialect "C99"
 
 	enablewarnings { "all" }
 	buildoptions { "-pedantic-errors" }
 
-	targetdir ("bin/%{prj.name}")
-	objdir ("obj/%{prj.name}")
+	targetdir "bin/%{prj.name}"
+	objdir "obj/%{prj.name}"
 
 	files {
 		"./include/**.h",
