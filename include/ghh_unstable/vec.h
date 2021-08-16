@@ -13,10 +13,10 @@
 #endif
 
 // if set, insert and remove will preserve order
-const unsigned VEC_ORDERED = 1 << 0;
+#define VEC_ORDERED 1
 // if set, push and pop will grow/shrink capacity in VEC_LINEAR_GROWTH size
 // chunks rather than by a factor of 2
-const unsigned VEC_LINEAR = 1 << 1;
+#define VEC_LINEAR  2
 
 #define GHH_NUM_VEC_FLAGS 2
 

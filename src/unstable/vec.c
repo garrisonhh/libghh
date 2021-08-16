@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <string.h>
-#include <ghh_unstable/vec.h>
-#include <ghh_unstable/utils.h>
+#include <ghh_unstable/ghh.h>
 
 // vec =========================================================================
 

@@ -1,7 +1,5 @@
 #include <stdlib.h>
-#include <ghh/time.h>
-#include <ghh/utils.h>
-#include <ghh/memcheck.h>
+#include <ghh_unstable/ghh.h>
 
 struct timeval LAST_TIMEIT = {0};
 
@@ -35,7 +33,7 @@ void timeit_end(const char *message) {
 	if (message != NULL)
 		printf(": %s", message);
 
-	printf(":\t%ld.%06lis\n", time_diff.tv_sec, utime_diff.tv_usec);
+	printf(":\t%ld.%06lis\n", time_diff.tv_sec, time_diff.tv_usec);
 }
 
 void gtimer_make(gtimer_t *timer, size_t len_tracked) {
