@@ -30,36 +30,15 @@ void timeit_end(const char *message) {
 		time_diff.tv_usec += 1000000;
 	}
 
-	char us[7];
-
-	us[6] = 0;
-
-	sprintf(us, "%6li", time_diff.tv_usec);
-
-	for (int i = 0; i < 6; i++)
-		if (us[i] == ' ')
-			us[i] = '0';
-
 	printf("timeit");
 
 	if (message != NULL)
 		printf(": %s", message);
 
-	printf(":\t%ld.%ss\n", time_diff.tv_sec, us);
-
-	LAST_TIMEIT = time_now;
+	printf(":\t%ld.%06lis\n", time_diff.tv_sec, utime_diff.tv_usec);
 }
 
-struct ghh_timer {
-	double last_tick, this_tick;
-	double tick;
-	double *tracked;
-	size_t len_tracked, tracked_idx;
-};
-
-gtimer_t *gtimer_create(size_t len_tracked) {
-	gtimer_t *timer = malloc(sizeof(gtimer_t));
-
+void gtimer_make(gtimer_t *timer, size_t len_tracked) {
 	timer->this_tick = 0;
 	timer->len_tracked = len_tracked;
 	timer->tracked_idx = 0;
@@ -70,13 +49,10 @@ gtimer_t *gtimer_create(size_t len_tracked) {
 		timer->tracked[i] = 0.0;
 
 	gtimer_tick(timer);
-
-	return timer;
 }
 
-void gtimer_destroy(gtimer_t *timer) {
+void gtimer_kill(gtimer_t *timer) {
 	free(timer->tracked);
-	free(timer);
 }
 
 void gtimer_tick(gtimer_t *timer) {

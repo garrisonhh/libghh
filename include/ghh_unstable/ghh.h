@@ -2,6 +2,7 @@
 #define GHH_H
 
 #include "vec.h"
+#include "time.h"
 #include "utils.h"
 
 void ghh_init(void);
