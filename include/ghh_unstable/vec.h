@@ -4,21 +4,9 @@
 #include <stdlib.h>
 
 // configuration is shared by vec and fvec
-
 #ifndef VEC_MIN_CAP
 #define VEC_MIN_CAP 4
 #endif
-#ifndef VEC_LINEAR_GROWTH
-#define VEC_LINEAR_GROWTH 64
-#endif
-
-// if set, insert and remove will preserve order
-#define VEC_ORDERED 1
-// if set, push and pop will grow/shrink capacity in VEC_LINEAR_GROWTH size
-// chunks rather than by a factor of 2
-#define VEC_LINEAR  2
-
-#define GHH_NUM_VEC_FLAGS 2
 
 // vec =========================================================================
 // dynamic array implementation using void *
@@ -26,14 +14,12 @@
 typedef struct ghh_vec {
     void **data;
     size_t size, cap, min_cap;
-    unsigned flags: GHH_NUM_VEC_FLAGS;
 } vec_t;
 
 // used for vec_make macro
 struct ghh_vec_init_cfg {
     vec_t *vec;
     size_t init_cap;
-    unsigned flags: GHH_NUM_VEC_FLAGS;
 };
 
 void vec_make_internal(struct ghh_vec_init_cfg);
@@ -48,11 +34,13 @@ static inline void *vec_peek(vec_t *vec) { return vec->data[vec->size - 1]; }
 // dynamic array ops
 void vec_insert(vec_t *, size_t idx, void *item);
 void vec_remove(vec_t *, size_t idx);
+void vec_insert_ordered(vec_t *, size_t idx, void *item);
+void vec_remove_ordered(vec_t *, size_t idx);
 
 static inline void vec_clear(vec_t *vec) {
     if (vec->size) {
         vec_kill(vec);
-        vec_make(vec, .init_cap = vec->min_cap, .flags = vec->flags);
+        vec_make(vec, .init_cap = vec->min_cap);
     }
 }
 
@@ -78,12 +66,10 @@ static inline void vec_clear(vec_t *vec) {
 // internal stuff
 struct ghh_fvec {
     size_t size, cap, min_cap;
-    unsigned flags: GHH_NUM_VEC_FLAGS;
 };
 
 struct ghh_fvec_init_cfg {
     size_t item_size, init_cap;
-    unsigned flags: GHH_NUM_VEC_FLAGS;
     unsigned discard: 1;
 };
 
@@ -112,7 +98,7 @@ void *fvec_free_one_internal(size_t item_size, struct ghh_fvec *fv);
         ptr = fvec_alloc_one_internal(sizeof(*ptr), fvec_data(ptr));\
         ptr[fvec_size(ptr)++] = item;\
     } while (0)
-#define fvec_pop(ptr, item) (\
+#define fvec_pop(ptr) (\
         ptr = fvec_free_one_internal(sizeof(*ptr), fvec_data(ptr)),\
         ptr[--fvec_size(ptr)]\
     )

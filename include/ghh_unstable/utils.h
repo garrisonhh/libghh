@@ -15,13 +15,7 @@
 #define BIT_CLEAR(bitfield, index) do {bitfield &= ~(0x1 << (index));} while (0)
 
 // swap variables
-#define SWAP(a, b, temp)\
-	do {\
-		temp = a;\
-		a = b;\
-		b = temp;\
-	} while (0)
-
+#define SWAP(a, b, temp) do { temp = a; a = b; b = temp; } while (0)
 #define SWAP_XOR(a, b) (((a) ^ (b)) && ((b) ^= (a) ^= (b), (a) ^= (b)))
 
 // errors/debugging
