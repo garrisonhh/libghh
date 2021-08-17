@@ -11,19 +11,22 @@
 // vec =========================================================================
 // dynamic array implementation using void *
 
+// internal stuff
+struct ghh_vec_cfg {
+    struct ghh_vec *vec;
+    size_t init_cap;
+};
+
+void vec_make_internal(struct ghh_vec_cfg);
+
+// external stuff
 typedef struct ghh_vec {
     void **data;
     size_t size, cap, min_cap;
 } vec_t;
 
-// used for vec_make macro
-struct ghh_vec_init_cfg {
-    vec_t *vec;
-    size_t init_cap;
-};
-
-void vec_make_internal(struct ghh_vec_init_cfg);
-#define vec_make(...) vec_make_internal((struct ghh_vec_init_cfg){__VA_ARGS__})
+// lifetime
+#define vec_make(...) vec_make_internal((struct ghh_vec_cfg){__VA_ARGS__})
 static inline void vec_kill(vec_t *vec) { free(vec->data); }
 
 // LIFO stack ops
@@ -61,27 +64,29 @@ static inline void vec_clear(vec_t *vec) {
     qsort(vec->data, vec->size, sizeof(*vec->data), compare)
 
 // fvec ========================================================================
-// dynamic array implementation using fat pointers (fvec == fat vector) + macros
+// dynamic array implementation using fat pointers + macros (fvec == fat vector)
 
 // internal stuff
 struct ghh_fvec {
     size_t size, cap, min_cap;
 };
 
-struct ghh_fvec_init_cfg {
+struct ghh_fvec_cfg {
     size_t item_size, init_cap;
     unsigned discard: 1;
 };
 
-void *fvec_make_internal(struct ghh_fvec_init_cfg);
+void *fvec_make_internal(struct ghh_fvec_cfg);
 void *fvec_alloc_one_internal(size_t item_size, struct ghh_fvec *fv);
 void *fvec_free_one_internal(size_t item_size, struct ghh_fvec *fv);
 #define fvec_make2(ptr, ...)\
     (ptr) = fvec_make_internal(\
-        (struct ghh_fvec_init_cfg){sizeof(*(ptr)), __VA_ARGS__});
+        (struct ghh_fvec_cfg){sizeof(*(ptr)), __VA_ARGS__});
 
-// make/kill
+// external stuff
 #define fvec(type) type * // just to show programmer intent
+
+// lifetime
 #define fvec_make(...) do { fvec_make2(__VA_ARGS__, .discard = 0) } while (0)
 #define fvec_kill(ptr) free(fvec_data(ptr))
 

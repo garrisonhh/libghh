@@ -4,7 +4,7 @@
 
 // vec =========================================================================
 
-void vec_make_internal(struct ghh_vec_init_cfg cfg) {
+void vec_make_internal(struct ghh_vec_cfg cfg) {
     SANITY_CHECK(cfg.vec, "must pass a valid vec pointer to vec_init.\n");
 
     vec_t *vec = cfg.vec;
@@ -17,7 +17,7 @@ void vec_make_internal(struct ghh_vec_init_cfg cfg) {
 
 static void alloc_one(vec_t *vec) {
     if (vec->size + 1 > vec->cap) {
-        vec->cap *= 2;
+        vec->cap <<= 1;
         vec->data = realloc(vec->data, vec->cap * sizeof(*vec->data));
     }
 }
@@ -25,8 +25,8 @@ static void alloc_one(vec_t *vec) {
 static void free_one(vec_t *vec) {
     SANITY_CHECK(vec->size, "can't shrink vec of zero size.\n");
 
-    if (vec->cap > vec->min_cap && vec->size < vec->cap / 4) {
-        vec->cap /= 2;
+    if (vec->cap > vec->min_cap && vec->size < vec->cap >> 2) {
+        vec->cap >>= 1;
         vec->data = realloc(vec->data, vec->cap * sizeof(*vec->data));
     }
 }
@@ -93,7 +93,7 @@ void vec_remove_ordered(vec_t *vec, size_t idx) {
 #define FVEC_BYTES(item_size, cap)\
     (sizeof(struct ghh_fvec) + (item_size) * (cap))
 
-void *fvec_make_internal(struct ghh_fvec_init_cfg cfg) {
+void *fvec_make_internal(struct ghh_fvec_cfg cfg) {
     cfg.init_cap = MAX(cfg.init_cap, VEC_MIN_CAP);
 
     struct ghh_fvec *fv;
@@ -107,7 +107,7 @@ void *fvec_make_internal(struct ghh_fvec_init_cfg cfg) {
 
 void *fvec_alloc_one_internal(size_t item_size, struct ghh_fvec *fv) {
     if (fv->size + 1 > fv->cap) {
-        fv->cap *= 2;
+        fv->cap <<= 1;
         fv = realloc(fv, FVEC_BYTES(item_size, fv->cap));
     }
 
@@ -118,8 +118,8 @@ void *fvec_alloc_one_internal(size_t item_size, struct ghh_fvec *fv) {
 void *fvec_free_one_internal(size_t item_size, struct ghh_fvec *fv) {
     SANITY_CHECK(fv->size, "can't shrink fvec of zero size.\n");
 
-    if (fv->cap > fv->min_cap && fv->size < fv->cap / 4) {
-        fv->cap /= 2;
+    if (fv->cap > fv->min_cap && fv->size < fv->cap >> 2) {
+        fv->cap >>= 1;
         fv = realloc(fv, FVEC_BYTES(item_size, fv->cap));
     }
 

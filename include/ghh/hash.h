@@ -5,19 +5,15 @@
 #include <stdint.h>
 
 #if INTPTR_MAX == INT64_MAX
-
 // 64 bit
 typedef uint64_t hash_t;
 #define FNV_PRIME 0x00000100000001b3
 #define FNV_BASIS 0xcbf29ce484222325
-
 #else
-
 // 32 bit
 typedef uint32_t hash_t;
 #define FNV_PRIME 0x01000193a
 #define FNV_BASIS 0x811c9dc5
-
 #endif
 
 // fnv-1a hash function (http://isthe.com/chongo/tech/comp/fnv/)
