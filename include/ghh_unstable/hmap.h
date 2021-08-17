@@ -20,16 +20,16 @@ typedef uint32_t hash_t;
 #define HMAP_MIN_CAP 8
 #endif
 
-typedef struct ghh_hkey {
+typedef struct ghh_hnode {
+    void *value;
     hash_t hash; // 0 if unoccupied
     size_t index, steps; // intended loc, slots removed from intended loc
-} hkey_t;
+} hnode_t;
 
 // hmap assumes that keys that hash to the same value are the same, there's only
 // a ridiculously tiny chance fnv-1a will produce the same hash twice
 typedef struct ghh_hmap {
-    hkey_t *keys;
-    void **values;
+    hnode_t *nodes;
     size_t size, cap, min_cap;
 } hmap_t;
 
@@ -43,7 +43,7 @@ void hmap_make_internal(struct ghh_hmap_cfg);
 
 // lifetime
 #define hmap_make(...) hmap_make_internal((struct ghh_hmap_cfg){__VA_ARGS__})
-void hmap_kill(hmap_t *);
+static inline void hmap_kill(hmap_t *hmap) { free(hmap->nodes); }
 
 // ops
 void hmap_puts(hmap_t *, char *key, void *value);
