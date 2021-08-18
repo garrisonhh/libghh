@@ -1,5 +1,7 @@
 #include <stdlib.h>
-#include <ghh_unstable/ghh.h>
+#include <stdio.h>
+#include <sys/time.h> // mingw supplies this header
+#include <ghh_unstable/time.h>
 
 struct timeval LAST_TIMEIT = {0};
 

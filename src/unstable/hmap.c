@@ -24,6 +24,7 @@ static void rehash(hmap_t *hmap, size_t new_cap) {
     for (size_t i = 0; i < old_cap; ++i) {
         if (old_nodes[i].hash) {
             old_nodes[i].index = old_nodes[i].hash % hmap->cap;
+            old_nodes[i].steps = 0;
 
             put_node(hmap, &old_nodes[i]);
         }
@@ -89,6 +90,7 @@ void *hmap_gets(hmap_t *hmap, char *key) {
     hash_t hash = hash_str(key);
     size_t index = hash % hmap->cap;
 
+    // iterate through hash chain until match or empty node is found
     while (hmap->nodes[index].hash) {
         if (hmap->nodes[index].hash == hash)
             return hmap->nodes[index].value;
@@ -97,6 +99,25 @@ void *hmap_gets(hmap_t *hmap, char *key) {
     }
 
     return NULL;
+}
+
+void hmap_dels(hmap_t *hmap, char *key) {
+    hash_t hash = hash_str(key);
+    size_t index = hash % hmap->cap;
+    size_t last = index, steps = 0;
+
+    while (hmap->nodes[index = (index + 1) % hmap->cap].hash) {
+        if (hmap->nodes[index].steps >= ++steps) {
+            // found node that is a valid chain replacement
+            hmap->nodes[last] = hmap->nodes[index];
+            hmap->nodes[last].steps -= steps;
+            last = index;
+            steps = 0;
+        }
+    }
+
+    // last node in chain is now a duplicate
+    hmap->nodes[last].hash = 0;
 }
 
 void hmap_print(hmap_t *hmap) {

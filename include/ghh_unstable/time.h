@@ -2,7 +2,6 @@
 #define GHH_TIME_H
 
 #include <stddef.h>
-#include <sys/time.h> // mingw supplies this header
 
 double time_get(void);
 void timeit_start(void);

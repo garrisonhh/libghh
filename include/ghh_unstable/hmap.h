@@ -2,7 +2,6 @@
 #define GHH_HMAP_H
 
 #include <stdint.h>
-#include <ghh_unstable/ghh.h>
 
 #if INTPTR_MAX == INT64_MAX
 // 64 bit
@@ -48,6 +47,7 @@ static inline void hmap_kill(hmap_t *hmap) { free(hmap->nodes); }
 // ops
 void hmap_puts(hmap_t *, char *key, void *value);
 void *hmap_gets(hmap_t *, char *key);
+void hmap_dels(hmap_t *, char *key);
 // TODO void hmap_put(); for any type with hash_any(char *, size_t size)
 
 void hmap_print(hmap_t *); // DEBUGGING
