@@ -4,7 +4,7 @@
 
 #include "time.h"
 
-struct timeval LAST_TIMEIT = {0};
+static struct timeval timeit_last = {0};
 
 double time_get() {
 	struct timeval now;
@@ -15,7 +15,7 @@ double time_get() {
 }
 
 void timeit_start() {
-	gettimeofday(&LAST_TIMEIT, NULL);
+	gettimeofday(&timeit_last, NULL);
 }
 
 void timeit_end(const char *message) {
@@ -23,8 +23,8 @@ void timeit_end(const char *message) {
 
 	gettimeofday(&time_now, NULL);
 
-	time_diff.tv_sec = time_now.tv_sec - LAST_TIMEIT.tv_sec;
-	time_diff.tv_usec = time_now.tv_usec - LAST_TIMEIT.tv_usec;
+	time_diff.tv_sec = time_now.tv_sec - timeit_last.tv_sec;
+	time_diff.tv_usec = time_now.tv_usec - timeit_last.tv_usec;
 
 	if (time_diff.tv_usec < 0) {
 		--time_diff.tv_sec;
