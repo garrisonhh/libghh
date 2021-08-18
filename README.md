@@ -1,25 +1,14 @@
 # libghh
 
-ISO C99 data structures and utilities I made and personally use in my C99+ projects. there are no dependencies outside of libc.
+libghh is a minimal, modern, and performant ISO c99 compliant "standard library"
+with the goal of providing maximum utility with minimal cost.
 
 ## what's here?
 
-generalized implementations of...
-- your obligatory linked list
-- hashmap
-  - can hash strings or fixed-length keys of any data type
-  - open addressed
-  - uses fnv-1a hash algorithm
-- 2 types of dynamic arrays
-  - an opaque object implementation
-  - macro-heavy implementation applicable to any kind of pointer
-- priority heap
-
-utilities
-- runtime memory allocation checking
-- strings
-- timers
-
-## build
-
-add to a premake project using `include "PATH_TO_LIBGHH_DIR"` and then `links { "ghh" }`
+- vec and fvec
+    - void * and macro-based dynamic array implementations
+- hmap
+    - performant hashmap for strings (support for other data types on the way)
+- time + timer
+- utility macros
+    - common macros like MAX, MIN, and ARRAY_SIZE, bitfields, errors, assertions
