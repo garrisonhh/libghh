@@ -1,4 +1,4 @@
-# libghh
+# libghh 1.0.0
 
 data structures and utilities I made and personally use in my C99 projects.
 
