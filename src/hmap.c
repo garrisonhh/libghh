@@ -30,6 +30,8 @@ static void rehash(hmap_t *hmap, size_t new_cap) {
             put_node(hmap, &old_nodes[i]);
         }
     }
+
+    free(old_nodes);
 }
 
 static inline void alloc_slot(hmap_t *hmap) {
@@ -105,6 +107,16 @@ void *hmap_gets(hmap_t *hmap, char *key) {
 void hmap_dels(hmap_t *hmap, char *key) {
     hash_t hash = hash_str(key);
     size_t index = hash % hmap->cap;
+
+    // find node
+    while (hmap->nodes[index].hash != hash) {
+        if (!hmap->nodes[index].hash)
+            return; // node doesn't exist
+
+        index = (index + 1) % hmap->cap;
+    }
+
+    // replace chain
     size_t last = index, steps = 0;
 
     while (hmap->nodes[index = (index + 1) % hmap->cap].hash) {
@@ -119,16 +131,17 @@ void hmap_dels(hmap_t *hmap, char *key) {
 
     // last node in chain is now a duplicate
     hmap->nodes[last].hash = 0;
+    free_slot(hmap);
 }
 
 void hmap_print(hmap_t *hmap) {
-    printf("--- hashmap ---\n");
+    printf("--- nodes ---\n");
 
     for (size_t i = 0; i < hmap->cap; ++i) {
         hnode_t *node = &hmap->nodes[i];
 
         printf(
-            "%3zu : %016lX | %-6zu | %-6zu | %p\n",
+            "%3zu : %016lX | %-6zu | %-6zu | %s\n",
             i, node->hash, node->index, node->steps, node->value
         );
     }
