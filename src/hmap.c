@@ -3,7 +3,7 @@
 #include "hmap.h"
 
 // fnv-1a hash function (http://isthe.com/chongo/tech/comp/fnv/)
-static hash_t hash_str(char *str) {
+hash_t hash_str(char *str) {
     hash_t hash = FNV_BASIS;
 
     while (*str)
@@ -12,9 +12,16 @@ static hash_t hash_str(char *str) {
     return hash;
 }
 
-static void put_node(hmap_t *hmap, hnode_t *node);
+hash_t hash_bytes(uint8_t *bytes, size_t size) {
+    hash_t hash = FNV_BASIS;
 
-static void rehash(hmap_t *hmap, size_t new_cap) {
+    for (size_t i = 0; i < size; ++i)
+        hash = (hash ^ bytes[i]) * FNV_PRIME;
+
+    return hash;
+}
+
+static void hmap_rehash(hmap_t *hmap, size_t new_cap) {
     hnode_t *old_nodes = hmap->nodes;
     size_t old_cap = hmap->cap;
 
@@ -27,24 +34,24 @@ static void rehash(hmap_t *hmap, size_t new_cap) {
             old_nodes[i].index = old_nodes[i].hash % hmap->cap;
             old_nodes[i].steps = 0;
 
-            put_node(hmap, &old_nodes[i]);
+            hmap_put_internal(hmap, &old_nodes[i]);
         }
     }
 
     free(old_nodes);
 }
 
-static inline void alloc_slot(hmap_t *hmap) {
+static inline void hmap_alloc_slot(hmap_t *hmap) {
     if (++hmap->size > hmap->cap >> 1)
-        rehash(hmap, hmap->cap << 1);
+        hmap_rehash(hmap, hmap->cap << 1);
 }
 
-static inline void free_slot(hmap_t *hmap) {
+static inline void hmap_free_slot(hmap_t *hmap) {
     if (hmap->size-- < hmap->cap >> 2 && hmap->cap > hmap->min_cap)
-        rehash(hmap, hmap->cap >> 1);
+        hmap_rehash(hmap, hmap->cap >> 1);
 }
 
-static void put_node(hmap_t *hmap, hnode_t *node) {
+void hmap_put_internal(hmap_t *hmap, hnode_t *node) {
     size_t index = node->index;
 
     // find suitable bucket
@@ -62,35 +69,10 @@ static void put_node(hmap_t *hmap, hnode_t *node) {
     // found empty bucket
     hmap->nodes[index] = *node;
 
-    alloc_slot(hmap);
+    hmap_alloc_slot(hmap);
 }
 
-static void *get_key(hmap_t *hmap, hnode_t *node) {
-    ; // TODO
-
-    return NULL;
-}
-
-void hmap_make_internal(struct ghh_hmap_cfg cfg) {
-    hmap_t *hmap = cfg.hmap;
-
-    hmap->size = 0;
-    hmap->cap = hmap->min_cap = MAX(cfg.init_cap, HMAP_MIN_CAP);
-    hmap->nodes = calloc(hmap->cap, sizeof(*hmap->nodes));
-}
-
-void hmap_puts(hmap_t *hmap, char *key, void *value) {
-    hnode_t node = {
-        .value = value,
-        .hash = hash_str(key),
-        .index = node.hash % hmap->cap
-    };
-
-    put_node(hmap, &node);
-}
-
-void *hmap_gets(hmap_t *hmap, char *key) {
-    hash_t hash = hash_str(key);
+void *hmap_get_internal(hmap_t *hmap, hash_t hash) {
     size_t index = hash % hmap->cap;
 
     // iterate through hash chain until match or empty node is found
@@ -99,13 +81,13 @@ void *hmap_gets(hmap_t *hmap, char *key) {
             return hmap->nodes[index].value;
 
         index = (index + 1) % hmap->cap;
+
     }
 
     return NULL;
 }
 
-void hmap_dels(hmap_t *hmap, char *key) {
-    hash_t hash = hash_str(key);
+void hmap_del_internal(hmap_t *hmap, hash_t hash) {
     size_t index = hash % hmap->cap;
 
     // find node
@@ -131,7 +113,15 @@ void hmap_dels(hmap_t *hmap, char *key) {
 
     // last node in chain is now a duplicate
     hmap->nodes[last].hash = 0;
-    free_slot(hmap);
+    hmap_free_slot(hmap);
+}
+
+void hmap_make_internal(struct ghh_hmap_cfg cfg) {
+    hmap_t *hmap = cfg.hmap;
+
+    hmap->size = 0;
+    hmap->cap = hmap->min_cap = MAX(cfg.init_cap, HMAP_MIN_CAP);
+    hmap->nodes = calloc(hmap->cap, sizeof(*hmap->nodes));
 }
 
 void hmap_print(hmap_t *hmap) {
