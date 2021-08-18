@@ -6,5 +6,3 @@
     - especially for iters + FOREACH macros
 - text formatter
 - separate generalized hashmap and string hashmap
-- rename `array` to `vector` and `vector` to something else
-- consider data types

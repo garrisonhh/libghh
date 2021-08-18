@@ -1,5 +1,6 @@
 #include <stdlib.h>
-#include <ghh_unstable/ghh.h>
+
+#include "hmap.h"
 
 // fnv-1a hash function (http://isthe.com/chongo/tech/comp/fnv/)
 static hash_t hash_str(char *str) {
