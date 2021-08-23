@@ -1,19 +1,45 @@
-#define GHH_LIB_INTERNAL
 #include <stdlib.h>
-#include <ghh/gtimer.h>
-#include <ghh/utils.h>
-#include <ghh/memcheck.h>
+#include <stdio.h>
+#include <sys/time.h> // mingw supplies this header
 
-struct ghh_timer {
-	double last_tick, this_tick;
-	double tick;
-	double *tracked;
-	size_t len_tracked, tracked_idx;
-};
+#include "time.h"
 
-gtimer_t *gtimer_create(size_t len_tracked) {
-	gtimer_t *timer = malloc(sizeof(gtimer_t));
+static struct timeval timeit_last = {0};
 
+double time_get() {
+	struct timeval now;
+
+	gettimeofday(&now, NULL);
+
+	return (double)now.tv_sec + ((double)now.tv_usec) / 1000000.0;
+}
+
+void timeit_start() {
+	gettimeofday(&timeit_last, NULL);
+}
+
+void timeit_end(const char *message) {
+	struct timeval time_now, time_diff;
+
+	gettimeofday(&time_now, NULL);
+
+	time_diff.tv_sec = time_now.tv_sec - timeit_last.tv_sec;
+	time_diff.tv_usec = time_now.tv_usec - timeit_last.tv_usec;
+
+	if (time_diff.tv_usec < 0) {
+		--time_diff.tv_sec;
+		time_diff.tv_usec += 1000000;
+	}
+
+	printf("timeit");
+
+	if (message != NULL)
+		printf(": %s", message);
+
+	printf(":\t%ld.%06lis\n", time_diff.tv_sec, time_diff.tv_usec);
+}
+
+void gtimer_make(gtimer_t *timer, size_t len_tracked) {
 	timer->this_tick = 0;
 	timer->len_tracked = len_tracked;
 	timer->tracked_idx = 0;
@@ -24,18 +50,15 @@ gtimer_t *gtimer_create(size_t len_tracked) {
 		timer->tracked[i] = 0.0;
 
 	gtimer_tick(timer);
-
-	return timer;
 }
 
-void gtimer_destroy(gtimer_t *timer) {
+void gtimer_kill(gtimer_t *timer) {
 	free(timer->tracked);
-	free(timer);
 }
 
 void gtimer_tick(gtimer_t *timer) {
 	timer->last_tick = timer->this_tick;
-	timer->this_tick = timeit_get_time();
+	timer->this_tick = time_get();
 
 	timer->tick = timer->this_tick - timer->last_tick;
 
