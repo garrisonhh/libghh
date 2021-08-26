@@ -2,7 +2,7 @@
 #define GHH_H
 
 #ifndef __STDC_VERSION__
-#error "libghh requres C99."
+#error "libghh requires C99."
 #endif
 
 #include "src/vec.h"
