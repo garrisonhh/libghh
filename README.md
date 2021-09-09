@@ -1,4 +1,4 @@
-# libghh 1.0.0
+# libghh 2.0.0
 
 libghh is a minimal, modern, and performant ISO c99 compliant "standard library"
 with the goal of providing maximum utility with minimal cost.
