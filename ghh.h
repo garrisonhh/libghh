@@ -5,24 +5,20 @@
 #error "libghh requires C99."
 #endif
 
+#if INTPTR_MAX == INT64_MAX
+#define GHH_64BIT
+#else
+#define GHH_32BIT
+#endif
+
 #include "src/vec.h"
 #include "src/hmap.h"
 #include "src/time.h"
 #include "src/utils.h"
 
 #ifdef GHH_IMPL
-#define GHH_VEC_IMPL
-#define GHH_HMAP_IMPL
-#define GHH_TIME_IMPL
-#endif
-
-#ifdef GHH_VEC_IMPL
 #include "src/vec.c"
-#endif
-#ifdef GHH_HMAP_IMPL
 #include "src/hmap.c"
-#endif
-#ifdef GHH_TIME_IMPL
 #include "src/time.c"
 #endif
 

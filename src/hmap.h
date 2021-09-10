@@ -3,16 +3,14 @@
 
 #include <stdint.h>
 
-#if INTPTR_MAX == INT64_MAX
-// 64 bit
+#ifdef GHH_64BIT
 typedef uint64_t hash_t;
 #define FNV_PRIME 0x00000100000001b3
 #define FNV_BASIS 0xcbf29ce484222325
 #else
-// 32 bit
 typedef uint32_t hash_t;
 #define FNV_PRIME 0x01000193a
-#define FNV_BASIS 0x811c9dc5
+#define FNV_BASIS 0x0811c9dc5
 #endif
 
 #ifndef HMAP_MIN_CAP
@@ -40,13 +38,15 @@ struct ghh_hmap_cfg {
 
 hash_t hash_str(char *str);
 hash_t hash_bytes(uint8_t *bytes, size_t size);
+#define hash_any(thing) hash_bytes((uint8_t *)&(thing), sizeof(thing))
 void hmap_make_internal(struct ghh_hmap_cfg);
 void hmap_put_internal(hmap_t *, hnode_t *node);
 void *hmap_get_internal(hmap_t *, hash_t hash);
 void hmap_del_internal(hmap_t *hmap, hash_t hash);
 
 // lifetime
-#define hmap_make(...) hmap_make_internal((struct ghh_hmap_cfg){__VA_ARGS__})
+#define hmap_make(...)\
+    hmap_make_internal((struct ghh_hmap_cfg){.hmap = __VA_ARGS__})
 static inline void hmap_kill(hmap_t *hmap) { free(hmap->nodes); }
 
 // ops

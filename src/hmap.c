@@ -132,7 +132,7 @@ void hmap_print(hmap_t *hmap) {
 
         printf(
             "%3zu : %016lX | %-6zu | %-6zu | %s\n",
-            i, node->hash, node->index, node->steps, node->value
+            i, node->hash, node->index, node->steps, (char *)node->value
         );
     }
 }
