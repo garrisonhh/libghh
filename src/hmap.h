@@ -95,6 +95,8 @@ static inline void hmap_delb(hmap_t *hmap, uint8_t *bytes, size_t size) {
 #define hmap_del(hmap, key)\
     hmap_delb(hmap, (uint8_t *)&(key), sizeof(key))
 
-void hmap_print(hmap_t *); // DEBUGGING
+#ifdef GHH_DEBUG
+void hmap_print(hmap_t *);
+#endif
 
 #endif

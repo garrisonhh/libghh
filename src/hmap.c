@@ -81,7 +81,6 @@ void *hmap_get_internal(hmap_t *hmap, hash_t hash) {
             return hmap->nodes[index].value;
 
         index = (index + 1) % hmap->cap;
-
     }
 
     return NULL;
@@ -124,6 +123,7 @@ void hmap_make_internal(struct ghh_hmap_cfg cfg) {
     hmap->nodes = calloc(hmap->cap, sizeof(*hmap->nodes));
 }
 
+#ifdef GHH_DEBUG
 void hmap_print(hmap_t *hmap) {
     printf("--- nodes ---\n");
 
@@ -136,3 +136,4 @@ void hmap_print(hmap_t *hmap) {
         );
     }
 }
+#endif
