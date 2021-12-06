@@ -87,6 +87,21 @@ void *hmap_get_internal(hmap_t *hmap, hash_t hash) {
     return NULL;
 }
 
+bool hmap_has_internal(hmap_t *hmap, hash_t hash) {
+    size_t index = hash % hmap->cap;
+
+    // iterate through hash chain until match or empty node is found
+    while (hmap->nodes[index].hash) {
+        if (hmap->nodes[index].hash == hash)
+            return true;
+
+        index = (index + 1) % hmap->cap;
+
+    }
+
+    return false;
+}
+
 void hmap_del_internal(hmap_t *hmap, hash_t hash) {
     size_t index = hash % hmap->cap;
 
