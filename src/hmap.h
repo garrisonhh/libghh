@@ -2,6 +2,7 @@
 #define GHH_HMAP_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #ifdef GHH_64BIT
 typedef uint64_t hash_t;
