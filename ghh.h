@@ -14,12 +14,14 @@
 #include "src/vec.h"
 #include "src/hmap.h"
 #include "src/time.h"
+#include "src/mem.h"
 #include "src/utils.h"
 
 #ifdef GHH_IMPL
 #include "src/vec.c"
 #include "src/hmap.c"
 #include "src/time.c"
+#include "src/mem.c"
 #endif
 
 #endif
