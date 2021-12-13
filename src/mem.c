@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "data.h"
+#include "mem.h"
 
 void mono_make(mono_t *mono, size_t page_bytes) {
 #ifndef GHH_MEM_INIT_CAP
@@ -32,7 +32,7 @@ static void *mono_next_page(mono_t *mono, size_t bytes) {
     void *page = mono->pages[mono->cur_page] = malloc(bytes);
 
     if (!page)
-        GG_ERROR("page allocation failed!\n");
+        ERROR("page allocation failed!\n");
 
     return page;
 }
