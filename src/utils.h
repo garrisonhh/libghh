@@ -12,7 +12,7 @@
 // bitfield ops
 #define BIT_GET(bitfield, index) ((bitfield >> (index)) & 1)
 #define BIT_SET(bitfield, index) do {bitfield |= (0x1 << (index));} while (0)
-#define BIT_CLEAR(bitfield, index) do {bitfield &= ~(0x1 << (index));} while (0)
+#define BIT_CLR(bitfield, index) do {bitfield &= ~(0x1 << (index));} while (0)
 
 // swap variables
 #define SWAP(a, b, temp) do { temp = a; a = b; b = temp; } while (0)
@@ -21,7 +21,7 @@
 // errors/debugging
 #define ERROR(...)\
 	do {\
-		fprintf(stderr, "ERROR:%s:%d\n", __FILE__, __LINE__);\
+		fprintf(stderr, "ERROR at %s:%d\n", __FILE__, __LINE__);\
 		fprintf(stderr, __VA_ARGS__);\
 		exit(-1);\
 	} while (0)
@@ -31,5 +31,9 @@
 #else
 #define SANITY_CHECK(...)
 #endif
+
+// common IO operations
+char *file_read(const char *filepath, size_t *out_len);
+void file_write(const char *filepath, char *text);
 
 #endif

@@ -22,6 +22,7 @@
 #include "src/hmap.c"
 #include "src/time.c"
 #include "src/mem.c"
+#include "src/utils.c"
 #endif
 
 #endif
