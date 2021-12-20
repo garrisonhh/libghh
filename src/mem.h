@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 
 // page-based monotonic allocator
 typedef struct ghh_mono {
