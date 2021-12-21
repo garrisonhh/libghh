@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "mem.h"
 
@@ -70,3 +71,12 @@ void *mono_alloc(mono_t *mono, size_t bytes) {
 
     return ptr;
 }
+
+void *mono_copy(mono_t *mono, void *data, size_t bytes) {
+    void *ptr = mono_alloc(mono, bytes);
+
+    memcpy(ptr, data, bytes);
+
+    return ptr;
+}
+

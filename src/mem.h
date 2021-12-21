@@ -20,6 +20,7 @@ void mono_make(mono_t *, size_t page_bytes);
 void mono_kill(mono_t *);
 
 void *mono_alloc(mono_t *, size_t bytes);
+void *mono_copy(mono_t *, void *data, size_t bytes);
 
 #ifdef DEBUG
 static inline void mono_debug(mono_t *mono) {
