@@ -33,7 +33,7 @@ static void *mono_next_page(mono_t *mono, size_t bytes) {
     void *page = mono->pages[mono->cur_page] = malloc(bytes);
 
     if (!page)
-        ERROR("page allocation failed!\n");
+        PANIC("page allocation failed!\n");
 
     return page;
 }

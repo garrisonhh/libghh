@@ -2,9 +2,11 @@
 
 #include "utils.h"
 
+// TODO use error_e instead of panic for this stuff
+
 static void file_check(FILE *fp, const char *filepath) {
     if (!fp)
-        ERROR("could not find file \"%s\".\n", filepath);
+        PANIC("could not find file \"%s\".\n", filepath);
 }
 
 char *file_read(const char *filepath, size_t *out_len) {

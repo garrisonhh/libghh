@@ -27,13 +27,13 @@ typedef enum ghh_error { OK, ERR } error_e; // to be used as a return type
 // panic/debugging
 #define PANIC(...)\
 	do {\
-		fprintf(stderr, "ERROR at %s:%d\n", __FILE__, __LINE__);\
+		fprintf(stderr, "PANIC at %s:%d\n", __FILE__, __LINE__);\
 		fprintf(stderr, __VA_ARGS__);\
 		exit(-1);\
 	} while (0)
 
 #ifndef NDEBUG
-#define ENSURE(cond, ...) if (!(cond)) ERROR(__VA_ARGS__)
+#define ENSURE(cond, ...) if (!(cond)) PANIC(__VA_ARGS__)
 #else
 #define ENSURE(...)
 #endif
