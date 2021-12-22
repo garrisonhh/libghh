@@ -38,6 +38,8 @@ typedef enum ghh_error { OK, ERR } error_e; // to be used as a return type
 #define ENSURE(...)
 #endif
 
+#define UNREACHABLE PANIC("reached supposedly unreachable location.\n")
+
 // common IO operations
 char *file_read(const char *filepath, size_t *out_len);
 void file_write(const char *filepath, char *text);
