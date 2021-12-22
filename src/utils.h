@@ -2,6 +2,7 @@
 #define GHH_UTILS_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 // common macros
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
@@ -18,8 +19,13 @@
 #define SWAP(a, b, temp) do { temp = a; a = b; b = temp; } while (0)
 #define SWAP_XOR(a, b) (((a) ^ (b)) && ((b) ^= (a) ^= (b), (a) ^= (b)))
 
-// errors/debugging
-#define ERROR(...)\
+// runtime error handling
+typedef enum ghh_error { OK, ERR } error_e; // to be used as a return type
+
+#define TRY(thing) do { if (thing) return ERR; } while (0)
+
+// panic/debugging
+#define PANIC(...)\
 	do {\
 		fprintf(stderr, "ERROR at %s:%d\n", __FILE__, __LINE__);\
 		fprintf(stderr, __VA_ARGS__);\
@@ -27,9 +33,9 @@
 	} while (0)
 
 #ifndef NDEBUG
-#define SANITY_CHECK(cond, ...) if (!(cond)) ERROR(__VA_ARGS__)
+#define ENSURE(cond, ...) if (!(cond)) ERROR(__VA_ARGS__)
 #else
-#define SANITY_CHECK(...)
+#define ENSURE(...)
 #endif
 
 // common IO operations
