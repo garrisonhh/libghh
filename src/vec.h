@@ -31,6 +31,7 @@ static inline void vec_kill(vec_t *vec) { free(vec->data); }
 
 // LIFO stack ops
 void vec_push(vec_t *, void *item);
+void *vec_alloc(vec_t *);
 void *vec_pop(vec_t *);
 static inline void *vec_peek(vec_t *vec) { return vec->data[vec->size - 1]; }
 
@@ -103,6 +104,10 @@ void *fvec_free_one_internal(size_t item_size, struct ghh_fvec *fv);
         ptr = fvec_alloc_one_internal(sizeof(*ptr), fvec_data(ptr));\
         ptr[fvec_size(ptr)++] = item;\
     } while (0)
+#define fvec_alloc(ptr) (\
+        ptr = fvec_alloc_one_internal(sizeof(*ptr, fvec_data(ptr)),\
+        &ptr[fvec_size(ptr)++]\
+    )
 #define fvec_pop(ptr) (\
         ptr = fvec_free_one_internal(sizeof(*ptr), fvec_data(ptr)),\
         ptr[--fvec_size(ptr)]\

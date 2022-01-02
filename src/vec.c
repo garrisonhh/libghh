@@ -38,6 +38,12 @@ void vec_push(vec_t *vec, void *item) {
     vec->data[vec->size++] = item;
 }
 
+void *vec_alloc(vec_t *vec) {
+    alloc_one(vec);
+
+    return &vec->data[vec->size++];
+}
+
 void *vec_pop(vec_t *vec) {
     void *item = vec->data[vec->size - 1];
 
