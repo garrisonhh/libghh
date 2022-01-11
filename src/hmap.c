@@ -3,7 +3,7 @@
 #include "hmap.h"
 
 // fnv-1a hash function (http://isthe.com/chongo/tech/comp/fnv/)
-hash_t hash_str(char *str) {
+hash_t hash_str(const char *str) {
     hash_t hash = FNV_BASIS;
 
     while (*str)
@@ -12,7 +12,16 @@ hash_t hash_str(char *str) {
     return hash;
 }
 
-hash_t hash_bytes(uint8_t *bytes, size_t size) {
+hash_t hash_strn(const char *str, size_t len) {
+    hash_t hash = FNV_BASIS;
+
+    for (size_t i = 0; i < len && str[i]; ++i)
+        hash = (hash ^ str[i]) * FNV_PRIME;
+
+    return hash;
+}
+
+hash_t hash_bytes(const uint8_t *bytes, size_t size) {
     hash_t hash = FNV_BASIS;
 
     for (size_t i = 0; i < size; ++i)
