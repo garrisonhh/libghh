@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// builtins
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
 // common macros
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -38,7 +43,11 @@ typedef enum ghh_error { OK, ERR } error_e; // to be used as a return type
 #define ENSURE(...)
 #endif
 
+#if __has_builtin(__builtin_unreachable)
+#define UNREACHABLE __builtin_unreachable()
+#else
 #define UNREACHABLE PANIC("reached supposedly unreachable location.\n")
+#endif
 
 // common IO operations
 char *file_read(const char *filepath, size_t *out_len);
